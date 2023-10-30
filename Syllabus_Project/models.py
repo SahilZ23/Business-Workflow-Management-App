@@ -118,8 +118,9 @@ class Orders(models.Model):
     def __str__(self):
         return f"{self.orderNum}"
 
+### A model that can have the ammount of sales dome in total
 class Sales(models.Model):
-    salesAmmmount = models.ForeignKey(Orders)
+    salesAmmmount = models.ForeignKey(Orders, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return f"{self.salesAmmmount}"
