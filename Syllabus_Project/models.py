@@ -97,9 +97,12 @@ class Customer(models.Model):
     phoneNumber = models.CharField(max_length=40, null=True, blank=True)
     email = models.CharField(max_length=30, null=True, blank=True)
 
-    def __str__(self):
-        return f"{self.myName}"
     
+### Create a model for the Inventory
+class Items(models.Model):
+    ItemName = models.CharField(max_length=40, null=False, blank=False)
+    ItemNumber = models.IntegerField(unique=True)
+
 ### Create a model for the Inventory
 class Items(models.Model):
     ItemName = models.CharField(max_length=40, null=False, blank=False)
@@ -108,12 +111,6 @@ class Items(models.Model):
     def __str__(self):
         return f"{self.ItemName}"
 
-#### Create a model for the Orders placed
-class Orders(models.Model):
-    orderNum = models.IntegerField(unique=True)
-    orderAmmount = models.IntegerField()
-    # An order can have multiple Items
-    orderItems = models.ForeignKey(Items, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.orderNum}"
@@ -122,6 +119,4 @@ class Orders(models.Model):
 class Sales(models.Model):
     salesAmmmount = models.ForeignKey(Orders, on_delete=models.CASCADE)
 
-    def __str__(self) -> str:
-        return f"{self.salesAmmmount}"
 
