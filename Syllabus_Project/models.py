@@ -32,6 +32,11 @@ ROLES = (
     ("TA", "TA"),
     ("Instructor", "Instructor"),
     ("Admin", "Admin"),
+    ("HR", "HR"),
+    ("Operations", "Operations"),
+    ("Customer", "Customer"),
+    ("SalesAdmin", "SalesAdmin"),
+    ("SalesRep", "SalesRep")
 )
 
 
@@ -85,10 +90,37 @@ class Section(models.Model):
     def __str__(self):
         return f"{self.courses.courseNumber} - {self.section_number}"
 
+#### Creating models for the Customer
+class Customer(models.Model):
+    CusName = models.CharField(max_length=40)
+    CusLocation = models.CharField(max_length=20, null=True, blank=True)
+    phoneNumber = models.CharField(max_length=40, null=True, blank=True)
+    email = models.CharField(max_length=30, null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.myName}"
+    
+### Create a model for the Inventory
+class Items(models.Model):
+    ItemName = models.CharField(max_length=40, null=False, blank=False)
+    ItemNumber = models.IntegerField(unique=True)
 
+    def __str__(self):
+        return f"{self.ItemName}"
 
+#### Create a model for the Orders placed
+class Orders(models.Model):
+    orderNum = models.IntegerField(unique=True)
+    orderAmmount = models.IntegerField()
+    # An order can have multiple Items
+    orderItems = models.ForeignKey(Items, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.orderNum}"
 
+class Sales(models.Model):
+    salesAmmmount = models.ForeignKey(Orders)
 
+    def __str__(self) -> str:
+        return f"{self.salesAmmmount}"
 

@@ -6,3 +6,7 @@ admin.site.register(Courses)
 admin.site.register(Users)
 admin.site.register(Section)
 admin.site.register(Policies)
+# admin.site.register()
+# admin.site.register()
+# admin.site.register()
+
