@@ -89,11 +89,22 @@ class Section(models.Model):
 
     def __str__(self):
         return f"{self.courses.courseNumber} - {self.section_number}"
+    
+### Create a model for the Inventory
+class Items(models.Model):
+    ItemName = models.CharField(max_length=40, null=False, blank=False)
+    ItemNumber = models.IntegerField(unique=True)
 
+### Create a model for the Inventory
+class Items(models.Model):
+    ItemName = models.CharField(max_length=40, null=False, blank=False)
+    ItemNumber = models.IntegerField(unique=True)
 
+    def __str__(self):
+        return f"{self.ItemName}"
 
-
-
-
+### A model that can have the ammount of sales dome in total
+class Sales(models.Model):
+    salesAmmmount = models.ForeignKey(Orders, on_delete=models.CASCADE)
 
 
