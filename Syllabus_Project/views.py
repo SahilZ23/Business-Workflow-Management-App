@@ -2,7 +2,7 @@ import re
 from django.shortcuts import render, redirect
 from django.views import View
 
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies
+from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, CustomerInfo, ItemInfo, SalesData
 from Syllabus_Project.Validations import Validations
 
 validate = Validations()
@@ -138,6 +138,7 @@ class Admin(View):
         courses = list(Courses.objects.all())
         sections = list(Section.objects.all())
         users = list(Users.objects.all())
+
 
         return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users})
 
