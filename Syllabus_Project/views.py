@@ -2,7 +2,7 @@ import re
 from django.shortcuts import render, redirect
 from django.views import View
 
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, CustomerInfo, ItemInfo, SalesData
+from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items, Sales
 from Syllabus_Project.Validations import Validations
 
 validate = Validations()
@@ -33,7 +33,22 @@ class Login(View):
                 if u.role == "Instructor":
                     request.session["user_username"] = username
                     return redirect("userView")
+                
 
+                ################################################
+                # if u.role == "SalesAdmin":
+                #     request.session["user_username"] = username
+                #     return redirect("SalesAdminView")
+                # if u.role == "SalesRep":
+                #     request.session["user_username"] = username
+                #     return redirect("SalesRepView")
+                # if u.role == "HR":
+                #     request.session["user_username"] = username
+                #     return redirect("HRView")
+                # if u.role == "Operations":
+                #     request.session["user_username"] = username
+                #     return redirect("OperartionsView")
+ 
             else:
                 message = "Invalid Username/Password"
         else:
@@ -139,8 +154,20 @@ class Admin(View):
         sections = list(Section.objects.all())
         users = list(Users.objects.all())
 
+        customers = list(Customer.objects.all())
+        order = list(Orders.objects.all())
+        print(order)
+        sales = 0
+        for o in order:
+            sales += int(o.orderAmount)
 
-        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users})
+        print(sales)
+        
+        items = list(Items.objects.all())
+
+
+
+        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items})
 
     def post(self, request):
         pass
@@ -348,13 +375,6 @@ class AddSection(View):
                                                                                    courses=course,
                                                                                    users=user)
                 print("Section exists", sect)
-                #
-                # sect = Section(timeFrom=startTime,
-                #                timeTo=endTime,
-                #                class_room=room,
-                #                day=daysString,
-                #                courses=course,
-                #                user=user)
 
             else:
                 sect = Section(section_number=sectionNumber,
@@ -426,3 +446,53 @@ class Syllabus(View):
 
     def post(self, request):
         pass
+
+# class SalesAdminView(View):
+#     def get(self, request):
+
+
+class AddCustomer(View):
+    def get(self, request):
+        # Add your authentication and role checks here if necessary
+        # if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Instructor", "TA"):
+        #     return redirect("login")
+
+        # Make sure the login request is from a valid user.
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
+        except Exception as ex:
+            return redirect("login")
+
+        # render the create customer form
+        return render(request, "addCustomer.html", {"user": user, "role": role})  
+
+    def post(self, request):
+        # Retrieve and validate customer data from the POST request
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        cusName = request.POST.get('cusName')
+        cusAddress = request.POST.get('cusAddress')
+        phoneNumber = request.POST.get('phoneNumber')
+        email = request.POST.get('email')
+
+        # Perform validation using your validation module (if needed)
+        # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
+        # Check for validation errors
+        # Example: if len(errors) > 0:
+        #     error_msg = 'Please correct the following: '
+        #     for error in errors:
+        #         error_msg += error + '. '
+        #     return render(request, "customer_form.html", {"message": error_msg})
+
+        try:
+            # Create a new Customer instance and save it to the database
+            customer = Customer(cusName=cusName, cusAddress=cusAddress, phoneNumber=phoneNumber, email=email)
+            customer.save()
+            
+            if user.role == "Admin":
+                return redirect('/AdminView')
+            elif user.role == "SalesAdmin":
+                return redirect('/SalesAdminView')
+
+        except Exception as ex:
+            return render(request, "addCustomer.html", {"message": 'Something went wrong, check your information.'})

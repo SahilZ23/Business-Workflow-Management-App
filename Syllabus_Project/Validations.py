@@ -128,3 +128,10 @@ class Validations():
         return ""
 
 
+        # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
+        # Check for validation errors
+        # Example: if len(errors) > 0:
+        #     error_msg = 'Please correct the following: '
+        #     for error in errors:
+        #         error_msg += error + '. '
+        #     return render(request, "customer_form.html", {"message": error_msg})

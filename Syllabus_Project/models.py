@@ -34,15 +34,21 @@ class Courses(models.Model):
 
 
 ROLES = (
-    ("TA", "TA"),
-    ("Instructor", "Instructor"),
+    # The main roles for this project are Admin, SalesAdmin, SalesRep, HR and Operations
     ("Admin", "Admin"),
+    ("SalesRep", "SalesRep"),
+    ("SalesAdmin", "SalesAdmin"),
+    ("HR", "HR"),
+    ("Operations", "Operations"),
+
+    # REMOVE
+    ("TA", "TA"),
+    ("Instructor", "Instructor")
 )
 
 
 class Users(models.Model):
     role = models.CharField(max_length=20, choices=ROLES)
-
     user_username = models.CharField(max_length=20)
     user_password = models.CharField(max_length=40)
 
@@ -95,16 +101,40 @@ class Items(models.Model):
     ItemName = models.CharField(max_length=40, null=False, blank=False)
     ItemNumber = models.IntegerField(unique=True)
 
+class Customer(models.Model):
+    cusName = models.CharField(max_length=40)
+    # Can have an Office
+    cusAddress = models.CharField(max_length=20, null=True, blank=True)
+    # Can have an Office Number if Office is marked
+    phoneNumber = models.CharField(max_length=40, null=False, blank=True)
+    email = models.CharField(max_length=30, null=False, blank=True)
+
+    def __str__(self):
+        return f"{self.cusName}"
+    
 ### Create a model for the Inventory
 class Items(models.Model):
     ItemName = models.CharField(max_length=40, null=False, blank=False)
+    ItemPrice = models.IntegerField(default=0, null=False)
     ItemNumber = models.IntegerField(unique=True)
 
     def __str__(self):
         return f"{self.ItemName}"
+    
+### Create a modelfor the orders placed
+class Orders(models.Model):
+    orderNum = models.IntegerField(unique=True)
+    Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
+    orderDate = models.DateField()
+    orderAmount = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.orderNum}"
 
 ### A model that can have the ammount of sales dome in total
+### REMOVE THIS MODEL. NOT NECESSARY
 class Sales(models.Model):
-    salesAmmmount = models.ForeignKey(Orders, on_delete=models.CASCADE)
+    # Can be used to calculate the total amount of sales done.
+    salesAmmmount = models.ForeignKey(Orders, on_delete=models.DO_NOTHING)
 
 

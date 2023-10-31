@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin, AddCourse, AddUser, userView, TAView, \
-    AddPersonalInfo, AddSection, Policy, DeleteUsers, DeleteCourses, DeleteSections, Syllabus
+    AddPersonalInfo, AddSection, Policy, DeleteUsers, DeleteCourses, DeleteSections, Syllabus, AddCustomer
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,5 +32,16 @@ urlpatterns = [
     path('deleteUser', DeleteUsers.as_view(), name='deleteUser'),
     path('deleteCourse', DeleteCourses.as_view(), name='deleteCourse'),
     path('deleteSection', DeleteSections.as_view(), name='deleteSection'),
+
+    # URLS for HR, Operations, Customers and Sales
+    path('addCustomer', AddCustomer.as_view(), name="addCustomer"),
+    # path('deleteCustomer', DeleteCustomer.as_view(), name="deleteCustomer"),
+    # path('addOrder', AddOrder.as_view(), name="addOrder"),
+    # path('deleteOrder', DeleteOrder.as_view(), name="deleteOrder"),
+    # path('salesAdmin', SalesAdminView.as_view(), name="salesAdmin"),
+    # path('salesRep', SalesRepView.as_view(), name="salesRep"),
+    # path('HR', HRView.as_view(), name="HR"),
+    # path('operations', OperationsView.as_view(), name="operations"),
+
     re_path(r'^syllabus/(?P<year>[0-9]{4})/(?P<semester>[a-zA-Z]+)/(?P<courseNumber>[0-9]{3})', Syllabus.as_view(), name="syllabus")
 ]

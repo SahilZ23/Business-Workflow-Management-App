@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Add Customer</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div id="header" class="text-center">
+        <h1 style="visibility: hidden;"></h1>
+    </div>
+    <form action="/AddCustomer" method="post" class="pane-center" id="addCustomerForm">
+        <h2 class="h4 mb-3 font-weight-normal">Add Customer</h2>
+        {% csrf_token %}<br>
+         {% if message %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endif %}
+        <label for="cusName">Customer Name:  </label>
+        <input type="text" name="cusName" placeholder="Customer Name"><br>
+
+        <label for="cusAddress">Customer Address:  </label>
+        <input type="text" name="cusAddress" placeholder="Customer Address"><br>
+
+        <label for="phoneNumber">Phone Number:  </label>
+        <input type="text" name="phoneNumber" placeholder="Phone Number"><br>
+
+        <label for="email">Email:  </label>
+        <input type="text" name="email" placeholder="Email"><br>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <!-- Replace the following with your desired cancellation URLs -->
+        <button type="button" class="btn btn-dark" onclick="window.location.href='/userView';">Cancel</button>
+        <button type="button" class="btn btn-dark" onclick="window.location.href='/TAView';">Cancel</button>
+    </form>
+</body>
+</html>
