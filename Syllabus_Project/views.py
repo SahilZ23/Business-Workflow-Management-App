@@ -536,25 +536,30 @@ class AddOrder(View):
         try:
             user = Users.objects.get(user_username=request.session.get("user_username"))
             role = user.role
+            customers = Customer.objects.all()
         except Exception as ex:
             return redirect("login")
 
         # render the create customer form
-        return render(request, "addOrder.html", {"user": user, "role": role})  
+        return render(request, "addOrder.html", {"user": user, "role": role, "customers": customers})  
 
     def post(self, request):
         # Retrieve and validate customer data from the POST request
         user = Users.objects.get(user_username=request.session.get("user_username"))
         orderNum = request.POST.get('orderNum')
+        print(orderNum)
         customer = Customer.objects.get(id=request.POST['Customer'])
+        print(customer)
         orderDate = request.POST.get('orderDate')
+        print(orderDate)
         orderAmount = request.POST.get('orderAmount')
+        print(orderAmount)
 
         # Perform validation using your validation module (if needed)
 
         try:
-            # Create a new Customer instance and save it to the database
-            order = Orders(orderNum=orderNum, customer=customer, orderDate=orderDate, orderAmount=orderAmount)
+            # Create a new order instance and save it to the database
+            order = Orders(orderNum=orderNum, Customer=customer, orderDate=orderDate, orderAmount=orderAmount)
             order.save()
             
             if user.role == "Admin":
@@ -563,10 +568,34 @@ class AddOrder(View):
             #     return redirect('/OpeartionsView')
 
         except Exception as ex:
-            return render(request, "addCOrder.html", {"message": 'Something went wrong, check your information.'})
+            print("Exception occured: ", ex)
+            return render(request, "addOrder.html", {"message": 'Something went wrong, check your information.'})
+
+class ViewOrders(View):
+    def get(self, request):
+        # Authentication and role checks
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        if user.role not in ["Admin", "Operations"]:
+            return redirect("login")
+
+        # Fetch all orders
+        orders = Orders.objects.all()
+
+        # Render the view orders template
+        return render(request, "viewOrders.html", {"orders": orders, "user": user})
 
 class DeleteOrder(View):
     def get(self, request):
-        pass
+        # Fetch all orders
+        orders = Orders.objects.all()
+
+        # Render the cancel order template
+        return render(request, "cancelOrder.html", {"orders": orders})
+
     def post(self, request):
-        pass
+        # Retrieve and delete the specified order
+        order_id = request.POST.get('Order')
+        Orders.objects.filter(id=order_id).delete()
+
+        # Redirect after deletion
+        return redirect('/adminPage')  # Adjust the redirection as needed

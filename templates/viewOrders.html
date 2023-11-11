@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>View Orders</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div class="container pane-center">
+        <h1>View Orders</h1>
+
+        <!-- Back Button -->
+        <button onclick="window.history.back();" class="btn btn-secondary mb-3">Back</button>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order Number</th>
+                    <th>Customer</th>
+                    <th>Order Date</th>
+                    <th>Order Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.orderNum }}</td>
+                        <td>{{ order.Customer.cusName }}</td> <!-- Replace 'cusName' with the correct field if different -->
+                        <td>{{ order.orderDate }}</td>
+                        <td>{{ order.orderAmount }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No orders found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

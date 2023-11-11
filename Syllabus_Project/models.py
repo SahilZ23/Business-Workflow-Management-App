@@ -19,9 +19,6 @@ class PersonalInfo(models.Model):
         return f"{self.myName}"
 
 
-
-
-
 ROLES = (
     # The main roles for this project are Admin, SalesAdmin, SalesRep, HR and Operations
     ("Admin", "Admin"),

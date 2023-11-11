@@ -16,32 +16,36 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin, AddCourse, AddUser, userView, TAView, \
-    AddPersonalInfo, AddSection, Policy, DeleteUsers, DeleteCourses, DeleteSections, Syllabus, AddCustomer, SalesAdmin, DeleteCustomer, AddOrder, DeleteOrder
+    AddPersonalInfo, AddSection, Policy, DeleteUsers, DeleteCourses, DeleteSections, AddCustomer, SalesAdmin, DeleteCustomer, AddOrder, DeleteOrder, ViewOrders
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', Login.as_view(), name="login"),
     path('adminPage', Admin.as_view(), name="adminPage"),
     path('addUser', AddUser.as_view(), name="adduser"),
-    path('addCourse', AddCourse.as_view(), name="addcourse"),
-    path('addSection', AddSection.as_view(), name="addSection"),
-    path('userView', userView.as_view(), name="userView"),
-    path('TAView', TAView.as_view(), name="TAView"),
-    path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
-    path('addPolicy', Policy.as_view(), name='AddPolicy'),
     path('deleteUser', DeleteUsers.as_view(), name='deleteUser'),
-    path('deleteCourse', DeleteCourses.as_view(), name='deleteCourse'),
-    path('deleteSection', DeleteSections.as_view(), name='deleteSection'),
-
     # URLS for HR, Operations, Customers and Sales
     path('addCustomer', AddCustomer.as_view(), name="addCustomer"),
     path('SalesAdmin', SalesAdmin.as_view(), name="SalesAdmin"),
     path('deleteCustomer', DeleteCustomer.as_view(), name="deleteCustomer"),
     path('addOrder', AddOrder.as_view(), name="addOrder"),
     path('deleteOrder', DeleteOrder.as_view(), name="deleteOrder"),
+    path('viewOrder', ViewOrders.as_view(), name="viewOrder"),
     # path('salesRep', SalesRepView.as_view(), name="salesRep"),
     # path('HR', HRView.as_view(), name="HR"),
     # path('operations', OperationsView.as_view(), name="operations"),
 
-    re_path(r'^syllabus/(?P<year>[0-9]{4})/(?P<semester>[a-zA-Z]+)/(?P<courseNumber>[0-9]{3})', Syllabus.as_view(), name="syllabus")
+    # REMOVE THESE ONCE EVERYTHING IS COMPLETE
+    # path('addCourse', AddCourse.as_view(), name="addcourse"),
+    # path('addSection', AddSection.as_view(), name="addSection"),
+    # path('userView', userView.as_view(), name="userView"),
+    # path('TAView', TAView.as_view(), name="TAView"),
+    # path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
+    # path('addPolicy', Policy.as_view(), name='AddPolicy'),
+    # path('deleteCourse', DeleteCourses.as_view(), name='deleteCourse'),
+    # path('deleteSection', DeleteSections.as_view(), name='deleteSection'),
+
+
+
+    #re_path(r'^syllabus/(?P<year>[0-9]{4})/(?P<semester>[a-zA-Z]+)/(?P<courseNumber>[0-9]{3})', Syllabus.as_view(), name="syllabus")
 ]
