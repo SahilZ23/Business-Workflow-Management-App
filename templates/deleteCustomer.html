@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Admin</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<div id="header" class="text-center">
+    <h1 style="visibility: hidden;">Delete Customers</h1>
+</div>
+<body>
+    <form action="{% url 'deleteCustomer' %}" method="post" class="pane-center">
+        <h1>Select Customer to delete</h1><br>
+        {% csrf_token %}<br>
+
+        <label for="CustomersLabel">Customer :</label>
+        <select id="CustomersLabel" name="Customer">
+            {% for customer in customers %}
+                <option value="{{ customer.id }}">{{ customer.cusName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <button type="submit" class="btn btn-success">Delete Customer</button>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+    </form>
+</body>
+</html>

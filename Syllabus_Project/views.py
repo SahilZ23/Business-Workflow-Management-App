@@ -2,7 +2,7 @@ import re
 from django.shortcuts import render, redirect
 from django.views import View
 
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items, Sales
+from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items
 from Syllabus_Project.Validations import Validations
 
 validate = Validations()
@@ -33,12 +33,11 @@ class Login(View):
                 if u.role == "Instructor":
                     request.session["user_username"] = username
                     return redirect("userView")
-                
+                if u.role == "SalesAdmin":
+                    request.session["user_username"] = username
+                    return redirect("SalesAdmin")            
 
-                ################################################
-                # if u.role == "SalesAdmin":
-                #     request.session["user_username"] = username
-                #     return redirect("SalesAdminView")
+                ##################  TO ADD  ##############################
                 # if u.role == "SalesRep":
                 #     request.session["user_username"] = username
                 #     return redirect("SalesRepView")
@@ -280,6 +279,26 @@ class TAView(View):
     def post(self, request):
         pass
 
+class SalesAdmin(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "SalesAdmin"):
+            return redirect("login")
+
+        role = ""
+        orders = list(Orders.objects.all())
+        # Get a list of salesreps
+        salesreps = list(Users.objects.filter(role="SalesRep"))
+        print(salesreps)
+        sales = 0
+        for o in orders:
+            sales += int(o.orderAmount)
+
+        return render(request, "salesAdmin.html", {"courses": orders, "salesreps": salesreps, "sales": sales})
+
+    def post(self, request):
+        pass
+
+
 
 class Policy(View):
     def get(self, request):
@@ -447,9 +466,7 @@ class Syllabus(View):
     def post(self, request):
         pass
 
-# class SalesAdminView(View):
-#     def get(self, request):
-
+#CUSTOMER ADD/EDIT + DELETE
 
 class AddCustomer(View):
     def get(self, request):
@@ -490,9 +507,66 @@ class AddCustomer(View):
             customer.save()
             
             if user.role == "Admin":
-                return redirect('/AdminView')
+                return redirect('/adminPage')
             elif user.role == "SalesAdmin":
                 return redirect('/SalesAdminView')
 
         except Exception as ex:
             return render(request, "addCustomer.html", {"message": 'Something went wrong, check your information.'})
+        
+class DeleteCustomer(View):
+    def get(self, request):
+        customers = list(Customer.objects.all())
+        return render(request, "deleteCustomer.html", {"customers": customers})
+
+    def post(self, request):
+        Customer.objects.get(id=request.POST['Customer']).delete()
+        return redirect('/adminPage')
+    
+
+# ORDER ADD/EDIT + DELETE
+
+class AddOrder(View):
+    def get(self, request):
+        # Add your authentication and role checks here if necessary
+        # if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Instructor", "TA"):
+        #     return redirect("login")
+
+        # Make sure the login request is from a valid user.
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
+        except Exception as ex:
+            return redirect("login")
+
+        # render the create customer form
+        return render(request, "addOrder.html", {"user": user, "role": role})  
+
+    def post(self, request):
+        # Retrieve and validate customer data from the POST request
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        orderNum = request.POST.get('orderNum')
+        customer = Customer.objects.get(id=request.POST['Customer'])
+        orderDate = request.POST.get('orderDate')
+        orderAmount = request.POST.get('orderAmount')
+
+        # Perform validation using your validation module (if needed)
+
+        try:
+            # Create a new Customer instance and save it to the database
+            order = Orders(orderNum=orderNum, customer=customer, orderDate=orderDate, orderAmount=orderAmount)
+            order.save()
+            
+            if user.role == "Admin":
+                return redirect('/adminPage')
+            # elif user.role == "Operations":
+            #     return redirect('/OpeartionsView')
+
+        except Exception as ex:
+            return render(request, "addCOrder.html", {"message": 'Something went wrong, check your information.'})
+
+class DeleteOrder(View):
+    def get(self, request):
+        pass
+    def post(self, request):
+        pass
