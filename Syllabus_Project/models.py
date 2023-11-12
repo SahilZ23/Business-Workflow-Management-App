@@ -81,8 +81,8 @@ class Orders(models.Model):
     orderNum = models.IntegerField(unique=True)
     Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
     orderDate = models.DateField()
-    orderAmount = models.IntegerField()
-    
+    orderAmount = models.IntegerField(default=0)
+
     def __str__(self):
         return f"{self.orderNum}"
     
@@ -93,7 +93,7 @@ class OrderItems(models.Model):
     quantity = models.IntegerField(default=1)
     
     def __str__(self):
-        return f"{self.item.ItemName} x {self.quantity}"
+        return f"{self.order.orderNum} x {self.order.orderAmount}"
 
 
 class Courses(models.Model):
@@ -101,9 +101,6 @@ class Courses(models.Model):
     courseNumber = models.IntegerField()  # courseNumber should be unique and no course will have the same courseNumber
     semester = models.CharField(max_length=40)  # Fall, Spring, Winter, and Summer semesters
     year = models.IntegerField()
-
-    #section = models.IntegerField(unique=True)  # sections should also be unique for lecture, lab, discussion
-    # https://stackoverflow.com/questions/2201598/how-to-define-two-fields-unique-as-couple
 
     def __str__(self):
         return f"{self.courseName} - {self.courseNumber}"

@@ -1,4 +1,3 @@
-import re
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
@@ -6,6 +5,7 @@ from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Polic
 from Syllabus_Project.Validations import Validations
 from django.shortcuts import render, redirect, get_object_or_404
 from django.forms import modelformset_factory
+from django.db import transaction
 
 validate = Validations()
 
@@ -157,12 +157,11 @@ class Admin(View):
 
         customers = list(Customer.objects.all())
         order = list(Orders.objects.all())
-        print(order)
         sales = 0
         for o in order:
             sales += int(o.orderAmount)
 
-        print(sales)
+       
         
         items = list(Items.objects.all())
         salesreps = list(Users.objects.filter(role="SalesRep"))
@@ -525,52 +524,8 @@ class DeleteCustomer(View):
         return redirect('/adminPage')
     
 
-# ORDER ADD/EDIT + DELETE
+# ORDER ADD/EDIT + DELETE + VIEW
 
-# class AddOrder(View):
-#     def get(self, request):
-#         # Add your authentication and role checks here if necessary
-#         if not Validations.checkLogin(self, request) or Validations.checkRole(self, request, "SalesRep", "HR", "SalesAdmin"):
-#             return redirect("login")
-
-#         # Make sure the login request is from a valid user.
-#         try:
-#             user = Users.objects.get(user_username=request.session.get("user_username"))
-#             role = user.role
-#             customers = Customer.objects.all()
-#         except Exception as ex:
-#             return redirect("login")
-
-#         # render the create customer form
-#         return render(request, "addOrder.html", {"user": user, "role": role, "customers": customers})  
-
-#     def post(self, request):
-#         # Retrieve and validate customer data from the POST request
-#         user = Users.objects.get(user_username=request.session.get("user_username"))
-#         orderNum = request.POST.get('orderNum')
-#         print(orderNum)
-#         customer = Customer.objects.get(id=request.POST['Customer'])
-#         print(customer)
-#         orderDate = request.POST.get('orderDate')
-#         print(orderDate)
-#         orderAmount = request.POST.get('orderAmount')
-#         print(orderAmount)
-
-#         # Perform validation using validation module (if needed)
-
-#         try:
-#             # Create a new order instance and save it to the database
-#             order = Orders(orderNum=orderNum, Customer=customer, orderDate=orderDate, orderAmount=orderAmount)
-#             order.save()
-            
-#             if user.role == "Admin":
-#                 return redirect('/adminPage')
-#             # elif user.role == "Operations":
-#             #     return redirect('/OpeartionsView')
-
-#         except Exception as ex:
-#             print("Exception occured: ", ex)
-#             return render(request, "addOrder.html", {"message": 'Something went wrong, check your information.'})
 class AddOrder(View):
     def get(self, request):
         # if not Validations.checkLogin(request) or Validations.checkRole(request, ["SalesRep", "HR", "SalesAdmin"]):
@@ -585,37 +540,49 @@ class AddOrder(View):
             return redirect("login")
         
         return render(request, "addOrder.html", {"user": user, "customers": customers, "formset": formset})
-
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
         OrderItemFormset = modelformset_factory(OrderItems, fields=('item', 'quantity'), extra=1)
         formset = OrderItemFormset(request.POST)
-        
-        try:
-            orderNum = request.POST.get('orderNum')
-            customer = Customer.objects.get(id=request.POST.get('Customer'))
-            orderDate = request.POST.get('orderDate')
-            orderAmount = request.POST.get('orderAmount')
-            
-            order = Orders(orderNum=orderNum, Customer=customer, orderDate=orderDate, orderAmount=orderAmount)
-            order.save()
 
-            if formset.is_valid():
-                order_items = formset.save(commit=False)
-                for item in order_items:
-                    item.order = order
-                    item.save()
+        order_amount = 0
 
-            if user.role == "Admin":
-                return redirect('/adminPage')
-#             # elif user.role == "Operations":
-#             #     return redirect('/OpeartionsView')
-        except Exception as ex:
-            return render(request, "addOrder.html", {
-                "message": 'Something went wrong: ' + str(ex),
-                "customers": Customer.objects.all(),
-                "formset": formset
-            })
+        with transaction.atomic():
+            try:
+                order_num = request.POST.get('orderNum')
+                customer = Customer.objects.get(id=request.POST.get('Customer'))
+                order_date = request.POST.get('orderDate')
+
+                # Create a new order instance without saving to the database yet
+                order = Orders(orderNum=order_num, Customer=customer, orderDate=order_date, orderAmount=0)
+
+                if formset.is_valid():
+                    # Temporarily save the order to associate it with order items
+                    order.save()
+
+                    # Create order items and calculate the total amount
+                    for form in formset:
+                        order_item = form.save(commit=False)
+                        order_item.order = order
+                        item_price = order_item.item.ItemPrice  # Assuming ItemPrice is a field on the related Items model
+                        order_amount += item_price * order_item.quantity
+                        order_item.save()
+
+                    # Update the order amount and save the order again
+                    order.orderAmount = order_amount
+                    order.save()
+
+                if user.role == "Admin":
+                    return redirect('/adminPage')
+# #             # elif user.role == "Operations":
+# #             #   
+
+            except Exception as ex:
+                return render(request, "addOrder.html", {
+                    "message": 'Something went wrong: ' + str(ex),
+                    "customers": Customer.objects.all(),
+                    "formset": formset
+                })
         
 class ViewOrders(View):
     def get(self, request, order_id=None):
