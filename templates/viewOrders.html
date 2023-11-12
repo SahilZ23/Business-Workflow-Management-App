@@ -25,19 +25,30 @@
                     <th>Customer</th>
                     <th>Order Date</th>
                     <th>Order Amount</th>
+                    <th>View Details</th> <!-- Added column for view details -->
                 </tr>
             </thead>
             <tbody>
                 {% for order in orders %}
                     <tr>
                         <td>{{ order.orderNum }}</td>
-                        <td>{{ order.Customer.cusName }}</td> <!-- Replace 'cusName' with the correct field if different -->
+                        <td>{{ order.Customer.cusName }}</td> 
                         <td>{{ order.orderDate }}</td>
                         <td>{{ order.orderAmount }}</td>
+                        <td>
+                            <!-- Link to view specific order -->
+                            <a href="{% url 'viewSpecificOrder' order.orderNum %}" class="btn btn-info btn-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5 8-5.5 8-5.5ZM8 5a3 3 0 0 1 6 3 3 3 0 0 1-6 3Z"/>
+                                    <path d="M8 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/>
+                                </svg>
+                                View
+                            </a>
+                        </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="4">No orders found.</td>
+                        <td colspan="5">No orders found.</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -1,3 +1,49 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Add Order</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div class="container pane-center">
+        <h1>Add Order</h1>
+
+        <form action="{% url 'addOrder' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="orderNum">Order Number:</label>
+                <input type="text" id="orderNum" name="orderNum" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Customer">Customer:</label>
+                <select id="Customer" name="Customer" class="form-control" required>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.cusName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="orderDate">Order Date:</label>
+                <input type="date" id="orderDate" name="orderDate" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="orderAmount">Order Amount:</label>
+                <input type="number" id="orderAmount" name="orderAmount" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-success">Add Order</button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+        </form>
+    </div>
+</body>
+</html> -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,6 +82,16 @@
                 <label for="orderAmount">Order Amount:</label>
                 <input type="number" id="orderAmount" name="orderAmount" class="form-control" required>
             </div>
+            
+            <!-- Order Items Formset -->
+            <h2>Order Items</h2>
+            {{ formset.management_form }}
+            {% for form in formset %}
+                <div class="form-group">
+                    {{ form.item.label_tag }} {{ form.item }}
+                    {{ form.quantity.label_tag }} {{ form.quantity }}
+                </div>
+            {% endfor %}
 
             <button type="submit" class="btn btn-success">Add Order</button>
             <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>

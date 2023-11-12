@@ -85,6 +85,16 @@ class Orders(models.Model):
 
     def __str__(self):
         return f"{self.orderNum}"
+    
+### Create a model for items in an order
+class OrderItems(models.Model):
+    order = models.ForeignKey(Orders, on_delete=models.CASCADE, related_name='order_items')
+    item = models.ForeignKey(Items, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    
+    def __str__(self):
+        return f"{self.item.ItemName} x {self.quantity}"
+
 
 class Courses(models.Model):
     courseName = models.CharField(max_length=100)
