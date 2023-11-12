@@ -1,7 +1,7 @@
 import re
 from django.shortcuts import render, redirect
 from django.views import View
-
+from django.contrib import messages
 from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items
 from Syllabus_Project.Validations import Validations
 
@@ -151,7 +151,7 @@ class Admin(View):
 
         courses = list(Courses.objects.all())
         sections = list(Section.objects.all())
-        users = list(Users.objects.all())
+        users = list(Users.objects.exclude(role="SalesRep"))
 
         customers = list(Customer.objects.all())
         order = list(Orders.objects.all())
@@ -163,10 +163,10 @@ class Admin(View):
         print(sales)
         
         items = list(Items.objects.all())
+        salesreps = list(Users.objects.filter(role="SalesRep"))
 
 
-
-        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items})
+        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps})
 
     def post(self, request):
         pass
@@ -599,3 +599,178 @@ class DeleteOrder(View):
 
         # Redirect after deletion
         return redirect('/adminPage')  # Adjust the redirection as needed
+    
+
+
+
+class AddItemView(View):
+    def get(self, request):
+        # Add authentication and permissions checks here if necessary
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
+        except Exception as ex:
+            return redirect("login")
+        
+        return render(request, "addItem.html", {"user": user})
+
+    def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        item_name = request.POST.get('ItemName')
+        item_number = request.POST.get('ItemNumber')
+        item_price = request.POST.get('ItemPrice')
+
+        # Check if the item number already exists
+        if Items.objects.filter(ItemNumber=item_number).exists():
+            messages.error(request, 'Item number already exists.')
+            return render(request, "addItem.html")
+
+        try:
+            # Create and save the new item
+            new_item = Items(ItemName=item_name, ItemNumber=item_number, ItemPrice=item_price)
+            new_item.save()
+            messages.success(request, 'Item added successfully.')
+
+            # Redirect to the previous page
+            if user.role == "Admin":
+                return redirect('/adminPage')
+            # elif user.role == "Operations":
+            #     return redirect('/OpeartionsView')
+
+        except Exception as e:
+            messages.error(request, f'Error adding item: {e}')
+            return render(request, "addItem.html")
+
+class DeleteItem(View):
+    def get(self, request):
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+        except Exception as ex:
+            return redirect("login")
+
+        items = Items.objects.all()
+        return render(request, 'deleteItem.html', {'items': items, "user": user})
+
+    def post(self, request):
+
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        item_id = request.POST.get('Item')
+        if not item_id:
+            messages.error(request, 'No item selected.')
+            return redirect('delete-item')  # Make sure to use the correct URL name
+
+        try:
+            item = Items.objects.get(id=item_id)
+            item.delete()
+            messages.success(request, 'Item deleted successfully.')
+        except Items.DoesNotExist:
+            messages.error(request, 'Item not found.')
+        except Exception as e:
+            messages.error(request, f'Error deleting item: {e}')
+
+       # Redirect to the previous page
+        if user.role == "Admin":
+            return redirect('/adminPage')
+            # elif user.role == "Operations":
+            #     return redirect('/OpeartionsView')
+
+class OperationsView(View):
+    def get(self, request):
+        pass
+    def post(self, request):
+        pass
+
+class addSalesRep(View):
+    def get(self, request):
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+        except Exception as ex:
+            return redirect("login")
+        
+        if not Validations.checkLogin(self, request):
+            return redirect("login")
+
+        return render(request, "addSalesRep.html", {"user": user})
+
+    def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        fullname = None
+        username = None
+        password = None
+        region = None
+
+        try:
+            fullname = request.POST['fullname']
+            username = request.POST['username']
+            password = request.POST['password']
+            region = request.POST['region']
+            print(region)
+            
+            # validationx
+            errors = validate.checkAddUserPost(fullname, username, password, "SalesRep", region)
+            if len(errors) > 0:
+                error_msg = 'Please correct the following: '
+                for error in errors:
+                    error_msg += error + '. '
+                return render(request, "addSalesRep.html", {"message": error_msg})
+
+        except Exception as ex:
+            print("Exception: ", ex)
+            return render(request, "addSalesRep.html", {"message": 'Something went wrong, check your information.'})
+        try:
+
+            if Users.objects.filter(user_username=username).exists():
+                user_e = Users.objects.get(user_username=username)
+                user_e.user_username = username
+                user_e.user_password = password
+                user_e.region = region
+
+                # store personal information
+                if user_e.info is None:
+                    user_e.info = PersonalInfo.objects.create(myName=fullname)
+                else:
+                    user_e.info.myName = fullname
+                    user_e.info.save()
+
+                user_e.save()
+            else:
+                new_personal_info = PersonalInfo.objects.create(myName=fullname)
+                newUser = Users.objects.create(user_username=username, user_password=password, role="SalesRep", info=new_personal_info)
+                newUser.save()
+
+            if user.role == "Admin":
+                return redirect('/adminPage')
+            elif user.role == "SalesAdmin":
+                return redirect('/SalesAdmin')
+            
+        except Exception as ex:
+            print("Exception: ", ex)
+            return render(request, "addSalesRep.html", {"message": 'Something went wrong, check your information.'})
+        
+class deleteSalesReps(View):
+    def get(self, request):
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+        except Exception as ex:
+            return redirect("login")
+        
+        if not Validations.checkLogin(self, request):
+            return redirect("login")
+        salesreps = list(Users.objects.filter(role="SalesRep"))
+
+        return render(request, "deleteSalesReps.html", {"user": user, "salesreps": salesreps})
+
+    def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+
+        try:
+            Users.objects.get(id=request.POST['User']).delete()
+        
+            if user.role == "Admin":
+                    return redirect('/adminPage')
+            elif user.role == "SalesAdmin":
+                    return redirect('/SalesAdmin')
+        except Exception as ex:
+            print("Exception:", ex)
+
+        return render(request, "deleteSalesReps.html", {"user": user})

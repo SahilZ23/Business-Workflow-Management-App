@@ -91,7 +91,7 @@ class Validations():
                 errors.append("Error: Could not parse numeric input")
         return errors
 
-    def checkAddUserPost(self, fullname, username, password, role):
+    def checkAddUserPost(self, fullname, username, password, role, region):
         is_numeric_regex = re.compile('[\d]+')
         has_alphanum_regex = re.compile('^[_.\-A-Za-z\d]+$')
         errors = []
@@ -105,6 +105,9 @@ class Validations():
         if (role,role) not in ROLES:
             errors.append("Role not a valid role")
 
+        if is_numeric_regex.match(region):
+            errors.append("Region cannot have numbers")
+            
         # this can be used for password requirements in the future
         if len(password) == 0:
             errors.append("Password is required")

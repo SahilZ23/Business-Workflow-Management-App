@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div id="header" class="text-center mb-4">
+        <h1>Add Item</h1>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h2 class="text-center">Add New Item</h2>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                <form action="{% url 'addItem' %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-group mb-2">
+                        <label for="ItemName">Item Name:</label>
+                        <input type="text" class="form-control" id="ItemName" name="ItemName" required>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="ItemPrice">Item Price:</label>
+                        <input type="text" class="form-control" id="ItemPrice" name="ItemPrice" required>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="ItemNumber">Item Number:</label>
+                        <input type="number" class="form-control" id="ItemNumber" name="ItemNumber" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                    
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

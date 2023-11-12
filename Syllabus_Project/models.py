@@ -34,15 +34,15 @@ ROLES = (
 
 class Users(models.Model):
     role = models.CharField(max_length=20, choices=ROLES)
-    user_username = models.CharField(max_length=20)
+    user_username = models.CharField(max_length=20, unique=True)
     user_password = models.CharField(max_length=40)
-
-    # Personal info will have many users' personal info but every user has only one personal information
     info = models.ForeignKey(PersonalInfo, on_delete=models.CASCADE, blank=True, null=True)
+    region = models.CharField(max_length=20, blank=True, null=True)  # Optional field
 
-    # ManyToManyField is basically a foreign key in which it creates a bridge
-    # by connecting courses having many users and users having many courses
-    #courses = models.ManyToManyField(Courses, blank=True)
+    def save(self, *args, **kwargs):
+        if self.role != "SalesRep":
+            self.region = None  # Clear region if role is not SalesRep
+        super().save(*args, **kwargs)  # Call the "real" save() method.
 
     def __str__(self):
         return f"{self.role}:{self.user_username}"
@@ -51,6 +51,10 @@ class Users(models.Model):
 class Items(models.Model):
     ItemName = models.CharField(max_length=40, null=False, blank=False)
     ItemNumber = models.IntegerField(unique=True)
+    ItemPrice = models.IntegerField(unique=False)
+
+    def __str__(self):
+        return f"{self.ItemName}"
 
 class Customer(models.Model):
     cusName = models.CharField(max_length=40)

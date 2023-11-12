@@ -3,37 +3,34 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>Delete Order</title>
+    <title>Delete Item</title>
     <link rel="stylesheet" href="static/css/bootstrap.css">
     <link href="static/style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 
 <div id="header" class="text-center mb-4">
-    <h1>Delete Order</h1>
+    <h1>Delete Item</h1>
 </div>
 
 <div class="container"> 
-    <form action="{% url 'deleteOrder' %}" method="post" class="pane-center">
+    <form action="{% url 'deleteItem' %}" method="post" class="pane-center">
         <div class="mb-3"> 
-            <h2>Select Order to Delete</h2>
+            <h2>Select Item to Delete</h2>
         </div>
 
         {% csrf_token %}
-
-        <div class="form-group mb-3"> <!-- mb-3 adds margin-bottom -->
-            <label for="OrdersLabel" class="form-label">Order ID:</label>
-            <select id="OrdersLabel" name="Order" class="form-select">
-                {% for order in orders %}
-                    <option value="{{ order.id }}">{{ order.orderNum }}</option>
+        <div class="form-group mb-3">
+            <label for="ItemsLabel" class="form-label">Item ID:</label>
+            <select id="ItemsLabel" name="Item" class="form-select">
+                {% for item in items %}
+                    <option value="{{ item.id }}">{{ item.ItemName }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        
-        <button type="submit" class="btn btn-danger me-5">Delete Order</button> 
+        <button type="submit" class="btn btn-danger">Delete Item</button>
         <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
-        
     </form>
 </div>
 

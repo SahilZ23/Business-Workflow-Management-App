@@ -40,14 +40,14 @@
             <thead>
                 <tr>
                     <th>Username</th>
-                    <!-- <th>Region</th> -->
+                    <th>Region</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in salesreps %}
                 <tr>
                     <td>{{ user.user_username }}</td>
-                    <!-- <td>{{ user.region }}</td> -->
+                    <td>{{ user.region }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -3,7 +3,7 @@
 <head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width">
-		<title>Admin</title>
+		<title>Delete Sales Representative</title>
 		<link rel="stylesheet" href="static/css/bootstrap.css">
 		<link href="static/style.css" rel="stylesheet" type="text/css" />
 	</head>
@@ -12,18 +12,18 @@
 	<h1 style="visibility: hidden;">Delete Users</h1>
 	</div>
 <body>
-    <form action="{% url 'deleteUser' %}" method="post" class="pane-center">
+    <form action="{% url 'deleteSalesRep' %}" method="post" class="pane-center">
         <h1>Select User to delete</h1><br>
         {% csrf_token %}<br>
 
          <label for="UsersLabel">User :</label>
                 <select id="UsersLabel" name="User">
-                    {% for i in users %}
+                    {% for i in salesreps %}
                         <option value = "{{ i.id }}">{{ i.user_username }}</option>
                     {% endfor %}
                 </select><br>
 
-         <button type="submit" class="btn btn-danger">Delete User</button>
+         <button type="submit" class="btn btn-danger">Delete Sales Representative</button>
          <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
 
      </form>
