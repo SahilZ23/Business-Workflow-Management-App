@@ -587,6 +587,7 @@ class AddOrder(View):
         return render(request, "addOrder.html", {"user": user, "customers": customers, "formset": formset})
 
     def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
         OrderItemFormset = modelformset_factory(OrderItems, fields=('item', 'quantity'), extra=1)
         formset = OrderItemFormset(request.POST)
         
@@ -605,7 +606,10 @@ class AddOrder(View):
                     item.order = order
                     item.save()
 
-            return redirect('/adminPage')
+            if user.role == "Admin":
+                return redirect('/adminPage')
+#             # elif user.role == "Operations":
+#             #     return redirect('/OpeartionsView')
         except Exception as ex:
             return render(request, "addOrder.html", {
                 "message": 'Something went wrong: ' + str(ex),
@@ -637,7 +641,7 @@ class ViewOrders(View):
             return redirect("login")
 
         # Get specific order or return 404 if not found
-        order = get_object_or_404(Orders, pk=order_id)
+        order = get_object_or_404(Orders, orderNum=order_id)
 
         # Fetch items for the specific order
         # This assumes that you have a related set of order items defined, replace 'order_items' with the correct related_name if needed

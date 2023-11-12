@@ -19,20 +19,35 @@
     <div class="container mt-4">
         <h1>Order Details</h1>
         <p><strong>Order Number:</strong> {{ order.orderNum }}</p>
-        <p><strong>Customer:</strong> {{ order.Customer.name }}</p> <!-- Assuming Customer model has 'name' field -->
+        <p><strong>Customer:</strong> {{ order.Customer.cusName }}</p> <!-- Assuming Customer model has 'name' field -->
         <p><strong>Order Date:</strong> {{ order.orderDate }}</p>
-        <p><strong>Order Amount:</strong> ${{ order.orderAmount }}</p>
 
         <h2>Items in Order</h2>
-        <ul>
-            {% for order_item in order_items %}
-            <li>{{ order_item.item.ItemName }} - Quantity: {{ order_item.quantity }} - Price: ${{
-                order_item.item.ItemPrice }}</li>
-            {% empty %}
-            <li>No items found in this order.</li>
-            {% endfor %}
-        </ul>
+        {% if order_items %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order_item in order_items %}
+                <tr>
+                    <td>{{ order_item.item.ItemName }}</td>
+                    <td>{{ order_item.quantity }}</td>
+                    <td>${{ order_item.item.ItemPrice }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No items found in this order.</p>
+        {% endif %}
 
+        <p><strong>Order Amount:</strong> ${{ order.orderAmount }}</p>
+        
         <button id="back" class="btn btn-dark" onclick="window.history.back();">Back
         </button>
     </div>

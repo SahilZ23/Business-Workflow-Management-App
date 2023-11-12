@@ -82,7 +82,7 @@ class Orders(models.Model):
     Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
     orderDate = models.DateField()
     orderAmount = models.IntegerField()
-
+    
     def __str__(self):
         return f"{self.orderNum}"
     
