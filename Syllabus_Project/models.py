@@ -47,7 +47,7 @@ class Users(models.Model):
 class Items(models.Model):
     ItemName = models.CharField(max_length=40, null=False, blank=False)
     ItemNumber = models.IntegerField(unique=True)
-    ItemPrice = models.IntegerField(unique=False)
+    ItemPrice = models.DecimalField(unique=False)
 
     def __str__(self):
         return f"{self.ItemName}"
@@ -56,6 +56,7 @@ class Customer(models.Model):
     cusName = models.CharField(max_length=40)
     # Can have an Office
     cusAddress = models.CharField(max_length=20, null=True, blank=True)
+    cusCity = models.CharField(max_length=15, null=True, blank=True)
     # Can have an Office Number if Office is marked
     phoneNumber = models.CharField(max_length=40, null=False, blank=True)
     email = models.EmailField(null=False, blank=False)
