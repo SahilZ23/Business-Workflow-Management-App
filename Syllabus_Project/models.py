@@ -5,6 +5,9 @@ import uuid
 class PersonalInfo(models.Model):
     myName = models.CharField(max_length=40)
     address = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=15, null=True, blank=True)
+    state = models.CharField(max_length=10, null=True, blank=True)
+    zip = models.IntegerField(max_length=6, null=True, blank=True)
     phoneNumber = models.CharField(max_length=40, null=False, blank=True)
     email = models.CharField(max_length=30, null=False, blank=True)
 
@@ -40,7 +43,7 @@ class Users(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.role}:{self.user_username}"
+        return f"{self.role}:{self.emp_id}"
 
     
 ### Create a model for the Inventory
@@ -57,6 +60,8 @@ class Customer(models.Model):
     # Can have an Office
     cusAddress = models.CharField(max_length=20, null=True, blank=True)
     cusCity = models.CharField(max_length=15, null=True, blank=True)
+    cusState = models.CharField(max_length=10, null=True, blank=True)
+    cusZip = models.IntegerField(max_length=6, null=True, blank=True)
     # Can have an Office Number if Office is marked
     phoneNumber = models.CharField(max_length=40, null=False, blank=True)
     email = models.EmailField(null=False, blank=False)
@@ -67,7 +72,7 @@ class Customer(models.Model):
 ### Create a model for the Inventory
 class Items(models.Model):
     ItemName = models.CharField(max_length=40, null=False, blank=False)
-    ItemPrice = models.IntegerField(default=0, null=False)
+    ItemPrice = models.DecimalField(max_digits=8, decimal_places=2, null=False)
     ItemNumber = models.IntegerField(unique=True)
 
     def __str__(self):
@@ -78,7 +83,7 @@ class Orders(models.Model):
     orderNum = models.IntegerField(unique=True)
     Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
     orderDate = models.DateField()
-    orderAmount = models.IntegerField(default=0)
+    orderAmount = models.DecimalField(max_digits=8, decimal_places=2)
 
     def __str__(self):
         return f"{self.orderNum}"

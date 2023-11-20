@@ -67,17 +67,17 @@ class AddPersonalInfo(View):
         return render(request, "personalInfo.html", {"user": user, "role": role, "user_id": user_id})
 
     def post(self, request):
-        user = None
         pi = None
         name = None
         add = None
         p_num = None
         email = None
         try:
-            user = Users.objects.get(user_username=request.session.get("user_username"))
-            pi = Users.objects.get(user_username=request.session.get("user_username"))
             name = request.POST.get('name')
             add = request.POST.get('address')
+            city = request.POST.get('city')
+            state = request.POST.get('state')
+            zip = request.POST.get('zip')
             p_num = request.POST.get('PhoneNumber')
             email = request.POST.get('email')
 
@@ -98,7 +98,7 @@ class AddPersonalInfo(View):
         )
         if not created:
             # If PersonalInfo already exists, update it
-            PersonalInfo.objects.filter(id=pi.id).update(myName=name, address=add, phoneNumber=p_num, email=email)
+            PersonalInfo.objects.filter(id=pi.id).update(myName=name, address=add, city=city, state=state, zip=zip, phoneNumber=p_num, email=email)
 
         return redirect('/HR')
 
@@ -333,7 +333,7 @@ class Admin(View):
         order = list(Orders.objects.all())
         sales = 0
         for o in order:
-            sales += int(o.orderAmount)
+            sales += (o.orderAmount)
 
        
         
@@ -440,6 +440,9 @@ class AddCustomer(View):
         user = Users.objects.get(user_username=request.session.get("user_username"))
         cusName = request.POST.get('cusName')
         cusAddress = request.POST.get('cusAddress')
+        cusCity = request.POST.get('cusCity')
+        cusState = request.POST.get('cusState')
+        cusZip = request.POST.get('cusZip')
         phoneNumber = request.POST.get('phoneNumber')
         email = request.POST.get('email')
 
@@ -454,13 +457,16 @@ class AddCustomer(View):
 
         try:
             # Create a new Customer instance and save it to the database
-            customer = Customer(cusName=cusName, cusAddress=cusAddress, phoneNumber=phoneNumber, email=email)
+            customer = Customer(cusName=cusName, cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, cusZip=cusZip, phoneNumber=phoneNumber, email=email)
             customer.save()
             
             if user.role == "Admin":
                 return redirect('/adminPage')
-            elif user.role == "SalesAdmin":
+            if user.role == "SalesAdmin":
                 return redirect('/SalesAdminView')
+            elif user.role == "SalesRep":
+                return redirect("salesRep")
+            
 
         except Exception as ex:
             return render(request, "addCustomer.html", {"message": 'Something went wrong, check your information.'})
@@ -704,7 +710,7 @@ class AddItemView(View):
             if user.role == "Admin":
                 return redirect('/adminPage')
             elif user.role == "Operations":
-                return redirect('/OpeartionsView')
+                return redirect('/Opeartions')
 
         except Exception as e:
             messages.error(request, f'Error adding item: {e}')
@@ -859,7 +865,23 @@ class SalesAdmin(View):
 
 class salesRep(View):
     def get(self, request):
-        pass
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "SalesRep"):
+            return redirect("login")
+
+        # Get the region of the logged-in sales representative
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        region = user.region
+        # Get customers in the sales rep's region
+        customers = Customer.objects.filter(cusCity=region)
+        order = Orders.objects.all()
+        orders = []
+
+        for i in order:
+            if i.Customer in customers:
+                orders.append(i)
+
+
+        return render(request, "salesRep.html", {"customers": customers, "orders": orders})
     def post(self, request):
         pass
 
@@ -891,8 +913,7 @@ class HR(View):
 
         try:
             # Fetch all employees excluding Admin users
-            users = Users.objects.all()
-            employees = Employee.objects.exclude(employee__role="Admin")
+            employees = Users.objects.exclude(role="Admin")
         except Exception as ex:
             print("Exception:", ex)
             return redirect('login')

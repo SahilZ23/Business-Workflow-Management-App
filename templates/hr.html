@@ -21,7 +21,6 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Username</th>
           <th>Email</th>
           <th>Phone Number</th>
           <th>Address</th>
@@ -31,14 +30,18 @@
       <tbody>
         {% for employee in employees %}
         <tr>
-          <td>{{ employee.employee.info.myName }}</td>
-          <td>{{ employee.employee.user_username }}</td>
-          <td>{{ employee.employee.info.email }}</td>
-          <td>{{ employee.employee.info.phoneNumber}}</td>
-          <td>{{ employee.employee.info.address }}</td>
+          <td>{{ employee.info.myName }}</td>
+          <td>{{ employee.info.email }}</td>
+          <td>{{ employee.info.phoneNumber}}</td>
           <td>
-            <!-- In hr.html -->
-            <button class="btn btn-primary" onclick="window.location.href='/AddPersonalInfo/{{ employee.employee.id }}';">Edit info</button>
+            {{ employee.info.address|default_if_none:"" }}{% if employee.info.address %}, {% endif %}
+            {{ employee.info.city|default_if_none:"" }}{% if employee.info.city %}, {% endif %}
+            {{ employee.info.state|default_if_none:"" }}{% if employee.info.state %}, {% endif %}
+            {{ employee.info.zip|default_if_none:"" }}
+        </td>
+        
+          <td>
+            <button class="btn btn-primary" onclick="window.location.href='/AddPersonalInfo/{{ employee.emp_id }}';">Edit info</button>
           </td>
         </tr>
         {% endfor %}

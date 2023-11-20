@@ -40,8 +40,7 @@ urlpatterns = [
     path('salesRep', salesRep.as_view(), name="salesRep"),
     path('HR', HR.as_view(), name="HR"),
     path('viewEmployee', ViewEmployeeInfo.as_view(), name="viewEmployee"),
-    # In urls.py
-    path('AddPersonalInfo/<int:user_id>/', AddPersonalInfo.as_view(), name='addPersonalInfo'),
+    path('AddPersonalInfo/<uuid:user_id>/', AddPersonalInfo.as_view(), name='AddPersonalInfo'),
     path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
 
     # REMOVE THESE ONCE EVERYTHING IS COMPLETE
