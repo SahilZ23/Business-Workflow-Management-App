@@ -1,59 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width">
     <title>PersonalInfo</title>
-    <link rel="stylesheet" href="static/css/bootstrap.css">
-    <link href="static/style.css" rel="stylesheet" type="text/css" />
+    <!-- <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" /> -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link href="{% static 'style.css' %}" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
     <div id="header" class="text-center">
-	    <h1 style="visibility: hidden;"></h1>
-	</div>
-    <form action="/AddPersonalInfo" method="post" class="pane-center" id="addPersonaInfoForm">
+        <h1 style="visibility: hidden;"></h1>
+    </div>
+    <form action="{%'AddPersonalInfo'%}" method="post" class="pane-center" id="addPersonalInfoForm">
         <h2 class="h4 mb-3 font-weight-normal">Add/Edit Personal Information</h2>
-        {% csrf_token %}<br>
-         {% if message %}
+        {% csrf_token %}
+        <br>
+        {% if message %}
             <div class="alert alert-danger">{{ message }}</div>
-          {% endif %}
-        <label for="Name">Name:  </label>
+        {% endif %}
+        <label for="myName">Name:</label>
         <input type="text" name="name" placeholder="Name"><br>
 
-        <label for="OfficeLocation">Office Location:  </label>
-        <input type="text" name="OfficeLocation" placeholder="Office Location"><br>
+        <label for="address">Address:</label>
+        <input type="text" name="address" placeholder="Address"><br>
 
-        <label for="OfficeNumber">Office Number:  </label>
-        <input type="number" name="OfficeNumber" placeholder="Office Number"><br>
-
-        <label for="PhoneNumber">Phone Number:  </label>
+        <label for="phoneNumber">Phone Number:</label>
         <input type="text" name="PhoneNumber" placeholder="Phone Number"><br>
 
-        <label for="Email">Email:  </label>
+        <label for="email">Email:</label>
         <input type="text" name="email" placeholder="Email"><br>
 
-        <label for="startTime">Time From</label>
-        <input type="time" id="sectionStartTime" name="startTime"><br>
-
-        <label for="endTime">Time To</label>
-        <input type="time" id="sectionEndTime" name="endTime"><br>
-
-        <label for="Sunday" class="dateCheckBox">Su:</label> <input type="checkbox" name="Sunday" value="1">
-        <label for="Monday" class="dateCheckBox">Mo:</label> <input type="checkbox" name="Monday" value="1">
-        <label for="Tuesday" class="dateCheckBox">Tu:</label> <input type="checkbox" name="Tuesday" value="1">
-        <label for="Wednesday" class="dateCheckBox">We:</label> <input type="checkbox" name="Wednesday" value="1">
-        <label for="Thursday" class="dateCheckBox">Th:</label> <input type="checkbox" name="Thursday" value="1">
-        <label for="Friday" class="dateCheckBox">Fr:</label> <input type="checkbox" name="Friday" value="1">
-        <label for="Saturday" class="dateCheckBox">Sa:</label> <input type="checkbox" name="Saturday" value="1"><br>
-
-        <button type="submit" class="btn btn-success">Save</button>
-        {% if role == "Instructor" %}
-            <button type="button" class="btn btn-dark" onclick="window.location.href='/userView';">Cancel</button>
-        {% endif %}
-        {% if role == "TA" %}
-            <button type="button" class="btn btn-dark" onclick="window.location.href='/TAView';">Cancel</button>
-        {% endif %}
+        <button type="submit" class="btn btn-success" onclick="window.location.href='/HR';">Save</button>
+        <button type="button" class="btn btn-dark" onclick="window.location.href='/HR';">Cancel</button>
     </form>
 </body>
 </html>

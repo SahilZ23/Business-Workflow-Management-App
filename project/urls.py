@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
-from Syllabus_Project.views import Login, Admin, AddCourse, AddUser, userView, TAView, \
-    AddPersonalInfo, AddSection, Policy, DeleteUsers, DeleteCourses, DeleteSections, AddCustomer, SalesAdmin, DeleteCustomer, AddOrder, DeleteOrder, ViewOrders, \
-    AddItemView, DeleteItem, addSalesRep, deleteSalesReps
+from Syllabus_Project.views import Login, Admin,  AddUser, DeleteUsers,  AddCustomer, SalesAdmin, DeleteCustomer, \
+     AddOrder, DeleteOrder, ViewOrders, AddItemView, DeleteItem, addSalesRep, deleteSalesReps, Operations,salesRep, HR, \
+     ViewEmployeeInfo, DeleteCourses, DeleteSections,AddCourse, userView, TAView, AddPersonalInfo, AddSection, Policy
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,21 +36,22 @@ urlpatterns = [
     path('addSalesRep', addSalesRep.as_view(), name ="addSalesRep"),
     path('deleteSalesRep', deleteSalesReps.as_view(), name ="deleteSalesRep"),
     path('viewOrder/<int:order_id>/', ViewOrders.as_view(), name="viewSpecificOrder"),
-    # path('salesRep', SalesRepView.as_view(), name="salesRep"),
-    # path('HR', HRView.as_view(), name="HR"),
-    # path('operations', OperationsView.as_view(), name="operations"),
+    path('Operations', Operations.as_view(), name="Operations"),
+    path('salesRep', salesRep.as_view(), name="salesRep"),
+    path('HR', HR.as_view(), name="HR"),
+    path('viewEmployee', ViewEmployeeInfo.as_view(), name="viewEmployee"),
+    # In urls.py
+    path('AddPersonalInfo/<int:user_id>/', AddPersonalInfo.as_view(), name='addPersonalInfo'),
+    path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
 
     # REMOVE THESE ONCE EVERYTHING IS COMPLETE
         # path('addCourse', AddCourse.as_view(), name="addcourse"),
         # path('addSection', AddSection.as_view(), name="addSection"),
         # path('userView', userView.as_view(), name="userView"),
         # path('TAView', TAView.as_view(), name="TAView"),
-        # path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
+
         # path('addPolicy', Policy.as_view(), name='AddPolicy'),
         # path('deleteCourse', DeleteCourses.as_view(), name='deleteCourse'),
         # path('deleteSection', DeleteSections.as_view(), name='deleteSection'),
-
-
-
-    #re_path(r'^syllabus/(?P<year>[0-9]{4})/(?P<semester>[a-zA-Z]+)/(?P<courseNumber>[0-9]{3})', Syllabus.as_view(), name="syllabus")
+        #re_path(r'^syllabus/(?P<year>[0-9]{4})/(?P<semester>[a-zA-Z]+)/(?P<courseNumber>[0-9]{3})', Syllabus.as_view(), name="syllabus")
 ]

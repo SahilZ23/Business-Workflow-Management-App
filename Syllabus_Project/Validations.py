@@ -1,4 +1,4 @@
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, ROLES
+from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, ROLES, Orders
 import re
 
 class Validations():
@@ -105,14 +105,22 @@ class Validations():
         if (role,role) not in ROLES:
             errors.append("Role not a valid role")
 
-        if is_numeric_regex.match(region):
+
+        if role == 'SalesRep' and not region:
+            errors.append("Region is required for Sales Representatives.")
+
+        if role != 'SalesRep' and region:
+            errors.append("Region should only be set for Sales Representatives.")
+        
+        if role=="SalesRep" and is_numeric_regex.match(region):
             errors.append("Region cannot have numbers")
-            
-        # this can be used for password requirements in the future
+
+        # password requirements
         if len(password) == 0:
             errors.append("Password is required")
         elif len(password) == 1:
             errors.append("Password is weak")
+
         return errors
 
     # return whether a user is permitted to update the policy for a course
@@ -138,3 +146,9 @@ class Validations():
         #     for error in errors:
         #         error_msg += error + '. '
         #     return render(request, "customer_form.html", {"message": error_msg})
+
+    def check_order_num_unique(self, order_num):
+            errors = []
+            if Orders.objects.filter(orderNum=order_num).exists():
+                errors.append("Order number must be unique.")
+            return errors

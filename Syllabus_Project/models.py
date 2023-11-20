@@ -1,19 +1,12 @@
 from django.db import models
+import uuid
 
 # Create your models here.
 class PersonalInfo(models.Model):
     myName = models.CharField(max_length=40)
-    # Can have an Office
-    officeLocation = models.CharField(max_length=20, null=True, blank=True)
-    # Can have an Office Number if Office is marked
-    officeNumber = models.IntegerField(null=True, blank=True)
+    address = models.CharField(max_length=100, null=True, blank=True)
     phoneNumber = models.CharField(max_length=40, null=False, blank=True)
     email = models.CharField(max_length=30, null=False, blank=True)
-    # Can have the days they are in office if they have declared an Office number
-    day = models.CharField(max_length=50, null=True)
-    # The time they work during the bussiness days
-    timeFrom = models.TimeField("Date Published", null=True)
-    timeTo = models.TimeField("DatePublished", null=True)
 
     def __str__(self):
         return f"{self.myName}"
@@ -31,21 +24,24 @@ ROLES = (
     ("Instructor", "Instructor")
 )
 
-
 class Users(models.Model):
     role = models.CharField(max_length=20, choices=ROLES)
     user_username = models.CharField(max_length=20, unique=True)
     user_password = models.CharField(max_length=40)
     info = models.ForeignKey(PersonalInfo, on_delete=models.CASCADE, blank=True, null=True)
-    region = models.CharField(max_length=20, blank=True, null=True)  # Optional field
+    region = models.CharField(max_length=20, blank=True, null=True)  # Optional for some roles
+    emp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    pay_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    hours = models.IntegerField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.role != "SalesRep":
             self.region = None  # Clear region if role is not SalesRep
-        super().save(*args, **kwargs)  # Call the "real" save() method.
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.role}:{self.user_username}"
+
     
 ### Create a model for the Inventory
 class Items(models.Model):
@@ -62,7 +58,7 @@ class Customer(models.Model):
     cusAddress = models.CharField(max_length=20, null=True, blank=True)
     # Can have an Office Number if Office is marked
     phoneNumber = models.CharField(max_length=40, null=False, blank=True)
-    email = models.CharField(max_length=30, null=False, blank=True)
+    email = models.EmailField(null=False, blank=False)
 
     def __str__(self):
         return f"{self.cusName}"
@@ -95,6 +91,14 @@ class OrderItems(models.Model):
     def __str__(self):
         return f"{self.order.orderNum} x {self.order.orderAmount}"
 
+class Employee(models.Model):
+    employee = models.ForeignKey(Users, on_delete=models.DO_NOTHING)
+    emp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    pay_rate = models.DecimalField(max_digits=8, decimal_places=2)
+    hours = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.employee.user_username} - {self.employee_id}"
 
 class Courses(models.Model):
     courseName = models.CharField(max_length=100)
@@ -137,3 +141,4 @@ class Section(models.Model):
 
     def __str__(self):
         return f"{self.courses.courseNumber} - {self.section_number}"
+    

@@ -1,61 +1,21 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items, OrderItems
+from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items, OrderItems, Employee
 from Syllabus_Project.Validations import Validations
 from django.shortcuts import render, redirect, get_object_or_404
 from django.forms import modelformset_factory
 from django.db import transaction
+from django.core.mail import EmailMultiAlternatives, send_mail, EmailMessage
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from project import settings
+
 
 validate = Validations()
 
 
 # Create your views here.
-class Login(View):
-    def get(self, request):
-        # request.session.pop("user_username", None)
-        return render(request, "login.html")
-
-    def post(self, request):
-        username = request.POST.get("loginEmail")
-        password = request.POST.get("loginPassword")
-        print(username, password)
-        message = ""
-        users = list(Users.objects.filter(user_username=username))
-        print(users)
-        if len(users) != 0:
-            u = users[0]
-            if u.user_password == password:
-                if u.role == "Admin":
-                    request.session["user_username"] = username
-                    return redirect("adminPage")
-                if u.role == "TA":
-                    request.session["user_username"] = username
-                    return redirect("TAView")
-                if u.role == "Instructor":
-                    request.session["user_username"] = username
-                    return redirect("userView")
-                if u.role == "SalesAdmin":
-                    request.session["user_username"] = username
-                    return redirect("SalesAdmin")            
-
-                ##################  TO ADD  ##############################
-                # if u.role == "SalesRep":
-                #     request.session["user_username"] = username
-                #     return redirect("SalesRepView")
-                # if u.role == "HR":
-                #     request.session["user_username"] = username
-                #     return redirect("HRView")
-                # if u.role == "Operations":
-                #     request.session["user_username"] = username
-                #     return redirect("OperartionsView")
- 
-            else:
-                message = "Invalid Username/Password"
-        else:
-            message = "Invalid Username/Password"
-        return render(request, "login.html", {"message": message})
-
 
 class AddCourse(View):
     def get(self, request):
@@ -92,90 +52,9 @@ class AddCourse(View):
                           {"message": message, "courses": Courses.objects.all(), "users": Users.objects.all(),
                            "sections": Section.objects.all()})
 
-
-class AddUser(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
-            return redirect("login")
-
-        return render(request, "adduser.html")
-
-    def post(self, request):
-        fullname = None
-        username = None
-        password = None
-        role = None
-
-        try:
-            fullname = request.POST['fullname']
-            username = request.POST['username']
-            password = request.POST['password']
-            role = request.POST['role']
-
-            # validation
-            errors = validate.checkAddUserPost(fullname, username, password, role)
-            if len(errors) > 0:
-                error_msg = 'Please correct the following: '
-                for error in errors:
-                    error_msg += error + '. '
-                return render(request, "adduser.html", {"message": error_msg})
-
-        except Exception as ex:
-            return render(request, "adduser.html", {"message": 'Something went wrong, check your information.'})
-
-        if Users.objects.filter(user_username=username).exists():
-            user = Users.objects.get(user_username=username)
-            user.user_username = username
-            user.user_password = password
-            user.role = role
-
-            # store personal information
-            if user.info is None:
-                user.info = PersonalInfo.objects.create(myName=fullname)
-            else:
-                user.info.myName = fullname
-                user.info.save()
-
-            user.save()
-        else:
-            new_personal_info = PersonalInfo.objects.create(myName=fullname)
-            newUser = Users.objects.create(user_username=username, user_password=password, role=role,
-                                           info=new_personal_info)
-            newUser.save()
-
-        return Admin.get(self, request)
-
-
-class Admin(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
-            return redirect("login")
-
-        courses = list(Courses.objects.all())
-        sections = list(Section.objects.all())
-        users = list(Users.objects.exclude(role="SalesRep"))
-
-        customers = list(Customer.objects.all())
-        order = list(Orders.objects.all())
-        sales = 0
-        for o in order:
-            sales += int(o.orderAmount)
-
-       
-        
-        items = list(Items.objects.all())
-        salesreps = list(Users.objects.filter(role="SalesRep"))
-
-
-        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps})
-
-    def post(self, request):
-        pass
-
-
 class AddPersonalInfo(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Instructor", "TA"):
+    def get(self, request, user_id):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "HR"):
             return redirect("login")
 
         # make sure the request is for a valid user that exists
@@ -185,76 +64,43 @@ class AddPersonalInfo(View):
         except Exception as ex:
             return redirect("login")
 
-        return render(request, "personalInfo.html", {"user": user, "role": role})
+        return render(request, "personalInfo.html", {"user": user, "role": role, "user_id": user_id})
 
     def post(self, request):
-        daysString = ""
         user = None
         pi = None
         name = None
-        loc = None
-        num = None
+        add = None
         p_num = None
         email = None
-        startTime = None
-        endTime = None
         try:
             user = Users.objects.get(user_username=request.session.get("user_username"))
             pi = Users.objects.get(user_username=request.session.get("user_username"))
             name = request.POST.get('name')
-            loc = request.POST.get('OfficeLocation')
-            num = request.POST.get('OfficeNumber')
+            add = request.POST.get('address')
             p_num = request.POST.get('PhoneNumber')
             email = request.POST.get('email')
-            startTime = request.POST['startTime']
-            endTime = request.POST['endTime']
 
             # validation
-            errors = validate.checkPersonalInfoPost(name=name, officeLocation=loc, officeNumber=num, phoneNumber=p_num, email=email)
-            if len(errors) > 0:
-                error_msg = 'Please correct the following: '
-                for error in errors:
-                    error_msg += error + '. '
-                return render(request, "personalInfo.html", {"message": error_msg})
+            # errors = validate.checkPersonalInfoPost(name=name, address=address, phoneNumber=p_num, email=email)
+            # if len(errors) > 0:
+            #     error_msg = 'Please correct the following: '
+            #     for error in errors:
+            #         error_msg += error + '. '
+            #     return render(request, "personalInfo.html", {"message": error_msg})
 
         except Exception as ex:
             return render(request, "personalInfo.html", {"message": 'Something went wrong, check your information.'})
 
-        # read the days checkboxes
-        days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        pi, created = PersonalInfo.objects.get_or_create(
+            myName=name,
+            defaults={'address': add, 'phoneNumber': p_num, 'email': email}
+        )
+        if not created:
+            # If PersonalInfo already exists, update it
+            PersonalInfo.objects.filter(id=pi.id).update(myName=name, address=add, phoneNumber=p_num, email=email)
 
-        for day in days:
-            if day in request.POST.keys():
-                if len(daysString) != 0:
-                    daysString += ', '
-                daysString += day
-
-        if PersonalInfo.objects.filter(myName=name).exists():
-            PersonalInfo.objects.filter(myName=name).update(officeLocation=loc,
-                                                            officeNumber=num,
-                                                            phoneNumber=p_num,
-                                                            email=email,
-                                                            day=daysString,
-                                                            timeFrom=startTime,
-                                                            timeTo=endTime)
-        else:
-            pi = PersonalInfo(myName=name,
-                              officeLocation=loc,
-                              officeNumber=num,
-                              phoneNumber=p_num,
-                              email=email,
-                              day=daysString,
-                              timeFrom=startTime,
-                              timeTo=endTime)
-            pi.save()
-            user.info = pi
-            user.save()
-            print(pi)
-
-        if user.role == "Instructor":
-            return redirect('/userView')
-        else:
-            return redirect('/TAView')
+        return redirect('/HR')
 
 
 class userView(View):
@@ -268,7 +114,6 @@ class userView(View):
     def post(self, request):
         pass
 
-
 class TAView(View):
     def get(self, request):
         if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "TA"):
@@ -279,27 +124,6 @@ class TAView(View):
 
     def post(self, request):
         pass
-
-class SalesAdmin(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "SalesAdmin"):
-            return redirect("login")
-
-        role = ""
-        orders = list(Orders.objects.all())
-        # Get a list of salesreps
-        salesreps = list(Users.objects.filter(role="SalesRep"))
-        print(salesreps)
-        sales = 0
-        for o in orders:
-            sales += int(o.orderAmount)
-
-        return render(request, "salesAdmin.html", {"courses": orders, "salesreps": salesreps, "sales": sales})
-
-    def post(self, request):
-        pass
-
-
 
 class Policy(View):
     def get(self, request):
@@ -346,7 +170,6 @@ class Policy(View):
             return render(request, "addPolicy.html", {
                 'courses': list(Section.objects.filter(users__user_username=request.session.get("user_username"))),
                 'error': "An error occurred, please check your inputs."})
-
 
 class AddSection(View):
     def get(self, request):
@@ -415,17 +238,6 @@ class AddSection(View):
 
         return Admin.get(self, request)
 
-
-class DeleteUsers(View):
-    def get(self, request):
-        users = list(Users.objects.exclude(role="SalesRep"))
-        return render(request, "deleteUsers.html", {"users": users})
-
-    def post(self, request):
-        Users.objects.get(id=request.POST['User']).delete()
-        return redirect('/adminPage')
-
-
 class DeleteCourses(View):
     def get(self, request):
         courses = list(Courses.objects.all())
@@ -435,7 +247,6 @@ class DeleteCourses(View):
         Courses.objects.get(id=request.POST['Course']).delete()
         return redirect('/adminPage')
 
-
 class DeleteSections(View):
     def get(self, request):
         sections = list(Section.objects.all())
@@ -444,7 +255,6 @@ class DeleteSections(View):
     def post(self, request):
         Section.objects.get(id=request.POST['Section']).delete()
         return redirect('/adminPage')
-
 
 class Syllabus(View):
     def get(self, request, year, semester, courseNumber):
@@ -466,6 +276,147 @@ class Syllabus(View):
 
     def post(self, request):
         pass
+
+class Login(View):
+    def get(self, request):
+        # request.session.pop("user_username", None)
+        return render(request, "login.html")
+
+    def post(self, request):
+        username = request.POST.get("loginEmail")
+        password = request.POST.get("loginPassword")
+        print(username, password)
+        message = ""
+        users = list(Users.objects.filter(user_username=username))
+        if len(users) != 0:
+            u = users[0]
+            if u.user_password == password:
+                if u.role == "Admin":
+                    request.session["user_username"] = username
+                    return redirect("adminPage")
+                if u.role == "TA":
+                    request.session["user_username"] = username
+                    return redirect("TAView")
+                if u.role == "Instructor":
+                    request.session["user_username"] = username
+                    return redirect("userView")
+                if u.role == "SalesAdmin":
+                    request.session["user_username"] = username
+                    return redirect("SalesAdmin")            
+                if u.role == "Operations":
+                    request.session["user_username"] = username
+                    return redirect("Operations")
+                if u.role == "SalesRep":
+                    request.session["user_username"] = username
+                    return redirect("salesRep")
+                if u.role == "HR":
+                    request.session["user_username"] = username
+                    return redirect("HR")
+                
+ 
+            else:
+                message = "Invalid Username/Password"
+        else:
+            message = "Invalid Username/Password"
+        return render(request, "login.html", {"message": message})
+
+class Admin(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
+            return redirect("login")
+
+        courses = list(Courses.objects.all())
+        sections = list(Section.objects.all())
+        users = list(Users.objects.exclude(role="SalesRep"))
+
+        customers = list(Customer.objects.all())
+        order = list(Orders.objects.all())
+        sales = 0
+        for o in order:
+            sales += int(o.orderAmount)
+
+       
+        
+        items = list(Items.objects.all())
+        salesreps = list(Users.objects.filter(role="SalesRep"))
+
+
+        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps})
+
+    def post(self, request):
+        pass
+
+# USER ADD/DELETE
+
+class AddUser(View):
+    def get(self, request):
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+        except Exception as ex:
+            print("Exception:", ex)
+            return redirect("login")
+        
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
+            return redirect("login")
+
+        return render(request, "adduser.html", {"user": user})
+
+    def post(self, request):
+        fullname = None
+        username = None
+        password = None
+        role = None
+        region = None
+
+        try:
+            fullname = request.POST['fullname']
+            username = request.POST['username']
+            password = request.POST['password']
+            role = request.POST['role']
+
+            # validation
+            errors = validate.checkAddUserPost(fullname, username, password, role, region)
+            if len(errors) > 0:
+                error_msg = 'Please correct the following: '
+                for error in errors:
+                    error_msg += error + '. '
+                return render(request, "adduser.html", {"message": error_msg})
+
+        except Exception as ex:
+            print("Exception: ", ex)
+            return render(request, "adduser.html", {"message": 'Something went wrong, check your information.'})
+
+        if Users.objects.filter(user_username=username).exists():
+            user = Users.objects.get(user_username=username)
+            user.user_username = username
+            user.user_password = password
+            user.role = role
+            user.region = region
+
+            # store personal information
+            if user.info is None:
+                user.info = PersonalInfo.objects.create(myName=fullname)
+            else:
+                user.info.myName = fullname
+                user.info.save()
+
+            user.save()
+        else:
+            new_personal_info = PersonalInfo.objects.create(myName=fullname)
+            newUser = Users.objects.create(user_username=username, user_password=password, role=role,
+                                           info=new_personal_info, region=region)
+            newUser.save()
+
+        return Admin.get(self, request)
+
+class DeleteUsers(View):
+    def get(self, request):
+        users = list(Users.objects.exclude(role="SalesRep"))
+        return render(request, "deleteUsers.html", {"users": users})
+
+    def post(self, request):
+        Users.objects.get(id=request.POST['User']).delete()
+        return redirect('/adminPage')
 
 #CUSTOMER ADD/EDIT + DELETE
 
@@ -552,7 +503,21 @@ class AddOrder(View):
                 order_num = request.POST.get('orderNum')
                 customer = Customer.objects.get(id=request.POST.get('Customer'))
                 order_date = request.POST.get('orderDate')
-
+                
+                # Check if order number is unique
+                print(order_num)
+                errors = validate.check_order_num_unique(order_num)
+                if errors:
+                    error_msg = ' '.join(errors)  # Join the list of errors into a single string message
+                    formset = OrderItemFormset(request.POST)  # Reinitialize formset with posted data
+                    return render(request, "addOrder.html", {
+                        "message": error_msg,
+                        "user": user,
+                        "customers": Customer.objects.all(),
+                        "formset": formset
+                    })
+            
+            
                 # Create a new order instance without saving to the database yet
                 order = Orders(orderNum=order_num, Customer=customer, orderDate=order_date, orderAmount=0)
 
@@ -572,17 +537,60 @@ class AddOrder(View):
                     order.orderAmount = order_amount
                     order.save()
 
+                # # Send an email to the customer when order is placed.
+                # try: 
+                #     subject = "Order Confirmation"
+                #     context = {
+                #             'customer_name': customer.cusName, 
+                #             'order_items': order_item.item.ItemName,  
+                #             'total_amount': order_amount,
+                #         }
+                #     html_content = render_to_string('orderConfirmation.html', context)
+                #     text_content = strip_tags(html_content)  # Fallback for plain text email clients
+                    
+                #     message = html_content
+                #     print(message)
+                #     email = str(customer.email)
+                #     print(email)
+                #     send_mail(subject, message, settings.EMAIL_HOST_USER, [email], fail_silently=True)
+
+                # except Exception as ex:
+                #     print("Email sending failed: ", ex)
+                try: 
+                    subject = "Order Confirmation"
+                    context = {
+                        'customer_name': customer.cusName, 
+                        'item_name': order_item.item.ItemName,  
+                        'item_quantity': order_item.quantity,
+                        'item_price': order_item.item.ItemPrice,
+                        'total_amount': order_amount,
+                    }
+                    html_content = render_to_string('orderConfirmation.html', context)
+                    text_content = strip_tags(html_content)  # Fallback for plain text email clients
+                    
+                    email = EmailMultiAlternatives(
+                        subject=subject,
+                        body=text_content,
+                        from_email=settings.EMAIL_HOST_USER,
+                        to=[str(customer.email)]
+                    )
+                    email.attach_alternative(html_content, "text/html")
+                    email.send()
+
+                except Exception as ex:
+                    print("Email sending failed: ", ex)
+
+
                 if user.role == "Admin":
                     return redirect('/adminPage')
-# #             # elif user.role == "Operations":
-# #             #   
+                elif user.role == "Operations":
+                    return redirect('/Operations')
+                elif user.role == "SalesRep":
+                    return redirect("/SalesAdmin")
 
             except Exception as ex:
-                return render(request, "addOrder.html", {
-                    "message": 'Something went wrong: ' + str(ex),
-                    "customers": Customer.objects.all(),
-                    "formset": formset
-                })
+                print("Exception:", ex)
+                return render(request, "addOrder.html")
         
 class ViewOrders(View):
     def get(self, request, order_id=None):
@@ -592,7 +600,7 @@ class ViewOrders(View):
         
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        if user.role not in ["Admin", "Operations"]:
+        if user.role not in ["Admin", "Operations", "SalesAdmin"]:
             return redirect("login")
 
         # Fetch all orders
@@ -604,7 +612,7 @@ class ViewOrders(View):
     def view_specific_order(self, request, order_id):
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        if user.role not in ["Admin", "Operations"]:
+        if user.role not in ["Admin", "Operations", "SalesAdmin"]:
             return redirect("login")
 
         # Get specific order or return 404 if not found
@@ -616,7 +624,6 @@ class ViewOrders(View):
 
         # Render the view specific order template with order details and items
         return render(request, "viewSpecificOrder.html", {"order": order, "order_items": order_items, "user": user})
-    
 
 class DeleteOrder(View):
     def get(self, request):
@@ -625,16 +632,45 @@ class DeleteOrder(View):
 
         # Render the cancel order template
         return render(request, "cancelOrder.html", {"orders": orders})
-
-    def post(self, request):
-        # Retrieve and delete the specified order
-        order_id = request.POST.get('Order')
-        Orders.objects.filter(id=order_id).delete()
-
-        # Redirect after deletion
-        return redirect('/adminPage')  # Adjust the redirection as needed
     
+    def post(self, request):
+        order_id = request.POST.get('Order')
+        order = Orders.objects.get(id=order_id)
+        print(order)
+        order_items = OrderItems.objects.get(order=order)
+        print(order_items)
+        # Prepare email content
+        try: 
+            subject = "Order Cancellation"
+            context = {
+                'customer_name': order.Customer.cusName, 
+                'item_name': order_items.item.ItemName,  
+                'item_quantity': order_items.quantity,
+                'item_price': order_items.item.ItemPrice,
+                'total_amount': order.orderAmount,
+            }
 
+            html_content = render_to_string('orderCancellation.html', context)
+            text_content = strip_tags(html_content)
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.EMAIL_HOST_USER,
+                to=[str(order.Customer.email)]  # Assuming the Customer model has an 'email' field
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+
+        except Exception as ex:
+            print("Error sending email", ex)
+
+        # Delete the order after sending the email
+        order.delete()
+
+        return redirect('/adminPage')
+
+# ITEM ADD/DELTE
 
 class AddItemView(View):
     def get(self, request):
@@ -656,7 +692,7 @@ class AddItemView(View):
         # Check if the item number already exists
         if Items.objects.filter(ItemNumber=item_number).exists():
             messages.error(request, 'Item number already exists.')
-            return render(request, "addItem.html")
+            return render(request, "addItem.html", {"user": user})
 
         try:
             # Create and save the new item
@@ -667,12 +703,12 @@ class AddItemView(View):
             # Redirect to the previous page
             if user.role == "Admin":
                 return redirect('/adminPage')
-            # elif user.role == "Operations":
-            #     return redirect('/OpeartionsView')
+            elif user.role == "Operations":
+                return redirect('/OpeartionsView')
 
         except Exception as e:
             messages.error(request, f'Error adding item: {e}')
-            return render(request, "addItem.html")
+            return render(request, "addItem.html", {"user": user})
 
 class DeleteItem(View):
     def get(self, request):
@@ -803,9 +839,78 @@ class deleteSalesReps(View):
 
         return render(request, "deleteSalesReps.html", {"user": user})
     
+# Sales Functionality
+
+class SalesAdmin(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "SalesAdmin"):
+            return redirect("login")
+        
+        orders = list(Orders.objects.all())
+        # Get a list of salesreps
+        salesreps = list(Users.objects.filter(role="SalesRep"))
+        print(salesreps)
+        sales = sum(o.orderAmount for o in orders)
+
+        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales})
+
+    def post(self, request):
+        pass
+
+class salesRep(View):
+    def get(self, request):
+        pass
+    def post(self, request):
+        pass
+
 # Operations Functionality
 
-class OperationsView(View):
+class Operations(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Operations"):
+            return redirect("login")
+        try:
+            items = list(Items.objects.all())
+            orders = list(Orders.objects.all())
+
+
+            # Call render with the request object as the first parameter
+            return render(request, "operations.html", {"items": items, "orders": orders})
+        except Exception as ex:
+            print("Exception:", ex)
+            return redirect("login")
+        
+    def post(self, request):
+        pass
+
+# HR Functionality
+class HR(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "HR"):
+            return redirect("login")
+
+        try:
+            # Fetch all employees excluding Admin users
+            users = Users.objects.all()
+            employees = Employee.objects.exclude(employee__role="Admin")
+        except Exception as ex:
+            print("Exception:", ex)
+            return redirect('login')
+        
+        return render(request, "hr.html", {"employees": employees})
+    
+    def post(self, request):
+        pass
+
+
+class ViewEmployeeInfo(View):
+    def get(self, request):
+        pass
+    def post(self, request):
+        pass
+
+# Generate Pay checks
+class GeneratePayCheck(View):
     def get(self, request):
         pass
     def post(self, request):

@@ -1,15 +1,16 @@
 from django.contrib import admin
-from .models import PersonalInfo, Courses, Users, Section, Policies, Customer, Items, Orders, OrderItems
+from .models import PersonalInfo, Courses, Users, Section, Policies, Customer, Items, Orders, OrderItems, Employee
 # Register your models here.
-admin.site.register(PersonalInfo)
 admin.site.register(Courses)
 admin.site.register(Users)
 admin.site.register(Section)
 admin.site.register(Policies)
 
 # Register the models for CS995
+admin.site.register(PersonalInfo)
 admin.site.register(Customer)
 admin.site.register(Items)
 admin.site.register(Orders)
 admin.site.register(OrderItems)
+admin.site.register(Employee)
 

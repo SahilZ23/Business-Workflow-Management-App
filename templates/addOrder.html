@@ -8,6 +8,9 @@
     <link href="static/style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
+    {% if message %}
+            <div class="alert alert-danger">{{ message }}</div>
+          {% endif %}
     <div class="container pane-center">
         <h1>Add Order</h1>
 
@@ -43,7 +46,7 @@
             {% endfor %}
 
             <button type="submit" class="btn btn-success">Add Order</button>
-            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+            <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancel</button>
         </form>
     </div>
 </body>
