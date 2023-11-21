@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin,  AddUser, DeleteUsers,  AddCustomer, SalesAdmin, DeleteCustomer, \
      AddOrder, DeleteOrder, ViewOrders, AddItemView, DeleteItem, addSalesRep, deleteSalesReps, Operations,salesRep, HR, \
-     ViewEmployeeInfo, DeleteCourses, DeleteSections,AddCourse, userView, TAView, AddPersonalInfo, AddSection, Policy
+     ViewEmployeeInfo, DeleteCourses, DeleteSections,AddCourse, userView, TAView, AddPersonalInfo, Navigate, AddSection, Policy
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -42,6 +42,7 @@ urlpatterns = [
     path('viewEmployee', ViewEmployeeInfo.as_view(), name="viewEmployee"),
     path('AddPersonalInfo/<uuid:user_id>/', AddPersonalInfo.as_view(), name='AddPersonalInfo'),
     path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
+    path('Navigate/<int:customer_id>/', Navigate.as_view(), name="Navigate"),
 
     # REMOVE THESE ONCE EVERYTHING IS COMPLETE
         # path('addCourse', AddCourse.as_view(), name="addcourse"),

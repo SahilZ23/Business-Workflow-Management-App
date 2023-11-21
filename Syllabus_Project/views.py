@@ -10,7 +10,8 @@ from django.core.mail import EmailMultiAlternatives, send_mail, EmailMessage
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from project import settings
-
+import urllib.parse
+import requests
 
 validate = Validations()
 
@@ -460,6 +461,7 @@ class AddCustomer(View):
             customer = Customer(cusName=cusName, cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, cusZip=cusZip, phoneNumber=phoneNumber, email=email)
             customer.save()
             
+            print(customer.id)
             if user.role == "Admin":
                 return redirect('/adminPage')
             if user.role == "SalesAdmin":
@@ -618,7 +620,7 @@ class ViewOrders(View):
     def view_specific_order(self, request, order_id):
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        if user.role not in ["Admin", "Operations", "SalesAdmin"]:
+        if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep"]:
             return redirect("login")
 
         # Get specific order or return 404 if not found
@@ -922,6 +924,39 @@ class HR(View):
     
     def post(self, request):
         pass
+
+
+class Navigate(View):
+    def get(self, request, customer_id):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        customer = Customer.objects.get(id=customer_id)
+
+        customer_address = f"{customer.cusAddress}, {customer.cusCity}, {customer.cusState}, {customer.cusZip}"    
+        user_address = f"{user.info.address}, {user.info.city}, {user.info.state}, {user.info.zip}"
+
+        customer_location = self.geocode_address(customer_address)
+        user_location = self.geocode_address(user_address)
+
+        context = {
+            'user_lat': user_location['lat'],
+            'user_lng': user_location['lng'],
+            'customer_lat': customer_location['lat'],
+            'customer_lng': customer_location['lng']
+        }
+
+        return render(request, "navigate.html", context)
+
+    def geocode_address(self, address):
+        api_file = open("Syllabus_Project/API_key.txt", "r")
+        api_key = api_file.read()
+        api_file.close()
+        api_key = "AIzaSyD6v15JNhOvb1ex_lELHwV6RqF3DUBq-hQ"
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?address={urllib.parse.quote(address)}&key={api_key}"
+        response = requests.get(url).json()
+        if response['status'] == 'OK':
+            return response['results'][0]['geometry']['location']
+        else:
+            return {'lat': 0, 'lng': 0}  # Default coordinates or error handling
 
 
 class ViewEmployeeInfo(View):
