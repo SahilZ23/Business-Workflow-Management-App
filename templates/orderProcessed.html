@@ -70,22 +70,22 @@
         </div>
 
         <p>Dear {{ customer_name }},</p>
-        <p>Thank you for your order. Here are the details of your purchase:</p>
+        <p>Your Order has been processed. Here are the details of your Order: </p>
         <table>
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
                 <th>Price</th>
             </tr>
+            {% for item in order_items %}
             <tr>
-                <td>{{ item_name }}</td>
-                <td>{{ item_quantity }}</td>
-                <td>${{ item_price }}</td>
+                <td>{{ item.item.ItemName }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.item.ItemPrice }}</td>
             </tr>
+            {% endfor %}
         </table>
         <p class="total-amount">Total Order Amount: ${{ total_amount }}</p>
-
-        <p>You will receive an email Confirmation when the order has been processed.</p>
     </div>
 </body>
 

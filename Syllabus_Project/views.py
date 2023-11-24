@@ -12,6 +12,7 @@ from django.utils.html import strip_tags
 from project import settings
 import urllib.parse
 import requests
+from django import forms
 
 validate = Validations()
 
@@ -487,118 +488,109 @@ class DeleteCustomer(View):
 
 class AddOrder(View):
     def get(self, request):
-        # if not Validations.checkLogin(request) or Validations.checkRole(request, ["SalesRep", "HR", "SalesAdmin"]):
+        # if not Validations.checkLogin(request) or Validations.checkRole(request, ["Admin", "SalesRep", "SalesAdmin", "Operations"]):
         #     return redirect("login")
         
         try:
             user = Users.objects.get(user_username=request.session.get("user_username"))
             customers = Customer.objects.all()
-            OrderItemFormset = modelformset_factory(OrderItems, fields=('item', 'quantity'), extra=1)
+            OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=3)
             formset = OrderItemFormset(queryset=OrderItems.objects.none())
+
         except Exception as ex:
             return redirect("login")
         
         return render(request, "addOrder.html", {"user": user, "customers": customers, "formset": formset})
+
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        OrderItemFormset = modelformset_factory(OrderItems, fields=('item', 'quantity'), extra=1)
+        OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=3)
         formset = OrderItemFormset(request.POST)
-
         order_amount = 0
-
-        with transaction.atomic():
-            try:
-                order_num = request.POST.get('orderNum')
-                customer = Customer.objects.get(id=request.POST.get('Customer'))
-                order_date = request.POST.get('orderDate')
+        
+        if formset.is_valid():
+            with transaction.atomic():
+                try:
+                    order_num = request.POST.get('orderNum')
+                    customer = Customer.objects.get(id=request.POST.get('Customer'))
+                    order_date = request.POST.get('orderDate')
+                    
+                    # Check if order number is unique
+                    print(order_num)
+                    errors = validate.check_order_num_unique(order_num)
+                    if errors:
+                        error_msg = ' '.join(errors)  # Join the list of errors into a single string message
+                        formset = OrderItemFormset(request.POST)  # Reinitialize formset with posted data
+                        return render(request, "addOrder.html", {
+                            "message": error_msg,
+                            "user": user,
+                            "customers": Customer.objects.all(),
+                            "formset": formset
+                        })
                 
-                # Check if order number is unique
-                print(order_num)
-                errors = validate.check_order_num_unique(order_num)
-                if errors:
-                    error_msg = ' '.join(errors)  # Join the list of errors into a single string message
-                    formset = OrderItemFormset(request.POST)  # Reinitialize formset with posted data
-                    return render(request, "addOrder.html", {
-                        "message": error_msg,
-                        "user": user,
-                        "customers": Customer.objects.all(),
-                        "formset": formset
-                    })
-            
-            
-                # Create a new order instance without saving to the database yet
-                order = Orders(orderNum=order_num, Customer=customer, orderDate=order_date, orderAmount=0)
+                
+                    # Create a new order instance without saving to the database yet
+                    order = Orders(orderNum=order_num, Customer=customer, orderDate=order_date, orderAmount=0)
 
-                if formset.is_valid():
+                    
                     # Temporarily save the order to associate it with order items
                     order.save()
 
                     # Create order items and calculate the total amount
-                    for form in formset:
-                        order_item = form.save(commit=False)
-                        order_item.order = order
-                        item_price = order_item.item.ItemPrice  # Assuming ItemPrice is a field on the related Items model
-                        order_amount += item_price * order_item.quantity
-                        order_item.save()
+                    for form in formset.cleaned_data:
+                        if form:
+                            item = form['item']
+                            quantity = form['quantity']
+                            if item and quantity:
+                                order_item = OrderItems(order=order, item=item, quantity=quantity)
+                                item_price = item.ItemPrice
+                                order_amount += item_price * quantity
+                                order_item.save()
 
-                    # Update the order amount and save the order again
                     order.orderAmount = order_amount
                     order.save()
 
-                # # Send an email to the customer when order is placed.
-                # try: 
-                #     subject = "Order Confirmation"
-                #     context = {
-                #             'customer_name': customer.cusName, 
-                #             'order_items': order_item.item.ItemName,  
-                #             'total_amount': order_amount,
-                #         }
-                #     html_content = render_to_string('orderConfirmation.html', context)
-                #     text_content = strip_tags(html_content)  # Fallback for plain text email clients
-                    
-                #     message = html_content
-                #     print(message)
-                #     email = str(customer.email)
-                #     print(email)
-                #     send_mail(subject, message, settings.EMAIL_HOST_USER, [email], fail_silently=True)
+                    try: 
+                        subject = "Order Confirmation"
+                        context = {
+                            'customer_name': customer.cusName, 
+                            'item_name': order_item.item.ItemName,  
+                            'item_quantity': order_item.quantity,
+                            'item_price': order_item.item.ItemPrice,
+                            'total_amount': order_amount,
+                        }
+                        html_content = render_to_string('orderConfirmation.html', context)
+                        text_content = strip_tags(html_content)  # Fallback for plain text email clients
+                        
+                        email = EmailMultiAlternatives(
+                            subject=subject,
+                            body=text_content,
+                            from_email=settings.EMAIL_HOST_USER,
+                            to=[str(customer.email)]
+                        )
+                        email.attach_alternative(html_content, "text/html")
+                        email.send()
 
-                # except Exception as ex:
-                #     print("Email sending failed: ", ex)
-                try: 
-                    subject = "Order Confirmation"
-                    context = {
-                        'customer_name': customer.cusName, 
-                        'item_name': order_item.item.ItemName,  
-                        'item_quantity': order_item.quantity,
-                        'item_price': order_item.item.ItemPrice,
-                        'total_amount': order_amount,
-                    }
-                    html_content = render_to_string('orderConfirmation.html', context)
-                    text_content = strip_tags(html_content)  # Fallback for plain text email clients
-                    
-                    email = EmailMultiAlternatives(
-                        subject=subject,
-                        body=text_content,
-                        from_email=settings.EMAIL_HOST_USER,
-                        to=[str(customer.email)]
-                    )
-                    email.attach_alternative(html_content, "text/html")
-                    email.send()
+                    except Exception as ex:
+                        print("Email sending failed: ", ex)
+
+                    if user.role == "Admin":
+                        return redirect('/adminPage')
+                    elif user.role == "Operations":
+                        return redirect('/Operations')
+                    elif user.role == "SalesRep":
+                        return redirect("/salesRep")
 
                 except Exception as ex:
-                    print("Email sending failed: ", ex)
-
-
-                if user.role == "Admin":
-                    return redirect('/adminPage')
-                elif user.role == "Operations":
-                    return redirect('/Operations')
-                elif user.role == "SalesRep":
-                    return redirect("/SalesAdmin")
-
-            except Exception as ex:
-                print("Exception:", ex)
-                return render(request, "addOrder.html")
+                    print("Exception:", ex)
+                    return render(request, "addOrder.html")
+        else:
+            # If formset is not valid, re-render the page with existing form data
+            return render(request, "addOrder.html", {
+                "user": user,
+                "customers": Customer.objects.all(),
+                "formset": formset
+            })
         
 class ViewOrders(View):
     def get(self, request, order_id=None):
@@ -608,11 +600,20 @@ class ViewOrders(View):
         
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        if user.role not in ["Admin", "Operations", "SalesAdmin"]:
+        if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep"]:
             return redirect("login")
 
-        # Fetch all orders
-        orders = Orders.objects.all()
+        if user.role== "SalesRep":
+            customers = Customer.objects.filter(cusCity=user.region)
+            order = Orders.objects.all()
+            orders = []
+
+            for i in order:
+                if i.Customer in customers:
+                    orders.append(i)
+        else:
+            # Fetch all orders
+            orders = Orders.objects.all()
 
         # Render the view orders template
         return render(request, "viewOrders.html", {"orders": orders, "user": user})
@@ -633,6 +634,69 @@ class ViewOrders(View):
         # Render the view specific order template with order details and items
         return render(request, "viewSpecificOrder.html", {"order": order, "order_items": order_items, "user": user})
 
+
+class OrderItemsForm(forms.ModelForm):
+    class Meta:
+        model = OrderItems
+        fields = ('item', 'quantity')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        item = cleaned_data.get('item')
+        quantity = cleaned_data.get('quantity')
+
+        if item and not quantity:
+            self.add_error('quantity', "Quantity is required when item is selected.")
+
+        if quantity and not item:
+            self.add_error('item', "Item is required when quantity is specified.")
+
+        return cleaned_data
+
+
+class ProcessOrder(View):
+    def get(self, request):
+        # Fetch all orders
+        orders = Orders.objects.filter(status="Placed")
+
+        # Render the cancel order template
+        return render(request, "processOrder.html", {"orders": orders})
+     
+    def post(self, request):
+        order_id = request.POST.get('Order')
+        order = Orders.objects.get(id=order_id)
+        order_items = OrderItems.objects.filter(order=order)
+       
+        # Prepare email content
+        try: 
+            subject = "Order Processed"
+            context = {
+                'customer_name': order.Customer.cusName, 
+                'order_items': order_items,
+                'total_amount': order.orderAmount,
+            }
+
+            html_content = render_to_string('orderProcessed.html', context)
+            text_content = strip_tags(html_content)
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.EMAIL_HOST_USER,
+                to=[str(order.Customer.email)] 
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+
+        except Exception as ex:
+            print("Error sending email", ex)
+
+        # Process the order
+        order.status = "Processed"
+        order.save()
+        
+        return redirect('/Operations')
+
 class DeleteOrder(View):
     def get(self, request):
         # Fetch all orders
@@ -642,6 +706,7 @@ class DeleteOrder(View):
         return render(request, "cancelOrder.html", {"orders": orders})
     
     def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
         order_id = request.POST.get('Order')
         order = Orders.objects.get(id=order_id)
         print(order)
@@ -676,7 +741,12 @@ class DeleteOrder(View):
         # Delete the order after sending the email
         order.delete()
 
-        return redirect('/adminPage')
+        if user.role == "Admin":
+            return redirect('/adminPage')
+        elif user.role == "Operations":
+            return redirect('/Operations')
+        elif user.role == "SalesRep":
+            return redirect("/SalesAdmin")
 
 # ITEM ADD/DELTE
 
@@ -807,7 +877,7 @@ class addSalesRep(View):
                 user_e.save()
             else:
                 new_personal_info = PersonalInfo.objects.create(myName=fullname)
-                newUser = Users.objects.create(user_username=username, user_password=password, role="SalesRep", info=new_personal_info)
+                newUser = Users.objects.create(user_username=username, user_password=password, role="SalesRep", region=region, info=new_personal_info)
                 newUser.save()
 
             if user.role == "Admin":
@@ -941,7 +1011,9 @@ class Navigate(View):
             'user_lat': user_location['lat'],
             'user_lng': user_location['lng'],
             'customer_lat': customer_location['lat'],
-            'customer_lng': customer_location['lng']
+            'customer_lng': customer_location['lng'], 
+            'cusAdd': customer_address, 
+            'customer': customer
         }
 
         return render(request, "navigate.html", context)

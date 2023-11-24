@@ -43,7 +43,7 @@ class Users(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.role}:{self.emp_id}"
+        return f"{self.user_username}:{self.emp_id}"
 
     
 ### Create a model for the Inventory
@@ -84,6 +84,7 @@ class Orders(models.Model):
     Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
     orderDate = models.DateField()
     orderAmount = models.DecimalField(max_digits=8, decimal_places=2)
+    status = models.CharField(max_length=10, default="Placed", null=False, blank=False)
 
     def __str__(self):
         return f"{self.orderNum}"

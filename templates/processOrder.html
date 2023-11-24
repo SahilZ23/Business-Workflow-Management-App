@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Process Order</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link href="{% static 'style.css' %}" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+<div id="header" class="text-center mb-4">
+    <h1>Process Order</h1>
+</div>
+
+<div class="container"> 
+    <form action="{% url 'ProcessOrder' %}" method="post" class="pane-center">
+        <div class="mb-3"> 
+            <h2>Select Order to Process</h2>
+        </div>
+
+        {% csrf_token %}
+
+        <div class="form-group mb-3"> <!-- mb-3 adds margin-bottom -->
+            <label for="OrdersLabel" class="form-label">Order ID:</label>
+            <select id="OrdersLabel" name="Order" class="form-select">
+                {% for order in orders %}
+                    <option value="{{ order.id }}">Order Number: {{ order.orderNum }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        
+        <button type="submit" class="btn btn-success me-5">Process Order</button> 
+        <button type="button" class="btn btn-secondary" onclick="window.history.back();">Cancel</button>
+        
+    </form>
+</div>
+
+</body>
+</html>
