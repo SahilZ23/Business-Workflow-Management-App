@@ -18,11 +18,12 @@ from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin,  AddUser, DeleteUsers,  AddCustomer, SalesAdmin, DeleteCustomer, \
      AddOrder, DeleteOrder, ViewOrders, AddItemView, DeleteItem, addSalesRep, deleteSalesReps, Operations,salesRep, HR, \
      ViewEmployeeInfo, DeleteCourses, DeleteSections,AddCourse, userView, TAView, AddPersonalInfo, Navigate, AddSection, Policy, \
-     ProcessOrder
+     ProcessOrder, verify
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', Login.as_view(), name="login"),
+    path('Verify', verify.as_view(), name="Verify"),
     path('adminPage', Admin.as_view(), name="adminPage"),
     path('addUser', AddUser.as_view(), name="adduser"),
     path('deleteUser', DeleteUsers.as_view(), name='deleteUser'),

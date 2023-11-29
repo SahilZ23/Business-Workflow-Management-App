@@ -13,6 +13,7 @@ from project import settings
 import urllib.parse
 import requests
 from django import forms
+from sinch import Client
 
 validate = Validations()
 
@@ -53,57 +54,6 @@ class AddCourse(View):
             return render(request, "admin.html",
                           {"message": message, "courses": Courses.objects.all(), "users": Users.objects.all(),
                            "sections": Section.objects.all()})
-
-class AddPersonalInfo(View):
-    def get(self, request, user_id):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "HR"):
-            return redirect("login")
-
-        # make sure the request is for a valid user that exists
-        try:
-            user = Users.objects.get(user_username=request.session.get("user_username"))
-            role = user.role
-        except Exception as ex:
-            return redirect("login")
-
-        return render(request, "personalInfo.html", {"user": user, "role": role, "user_id": user_id})
-
-    def post(self, request):
-        pi = None
-        name = None
-        add = None
-        p_num = None
-        email = None
-        try:
-            name = request.POST.get('name')
-            add = request.POST.get('address')
-            city = request.POST.get('city')
-            state = request.POST.get('state')
-            zip = request.POST.get('zip')
-            p_num = request.POST.get('PhoneNumber')
-            email = request.POST.get('email')
-
-            # validation
-            # errors = validate.checkPersonalInfoPost(name=name, address=address, phoneNumber=p_num, email=email)
-            # if len(errors) > 0:
-            #     error_msg = 'Please correct the following: '
-            #     for error in errors:
-            #         error_msg += error + '. '
-            #     return render(request, "personalInfo.html", {"message": error_msg})
-
-        except Exception as ex:
-            return render(request, "personalInfo.html", {"message": 'Something went wrong, check your information.'})
-
-        pi, created = PersonalInfo.objects.get_or_create(
-            myName=name,
-            defaults={'address': add, 'phoneNumber': p_num, 'email': email}
-        )
-        if not created:
-            # If PersonalInfo already exists, update it
-            PersonalInfo.objects.filter(id=pi.id).update(myName=name, address=add, city=city, state=state, zip=zip, phoneNumber=p_num, email=email)
-
-        return redirect('/HR')
-
 
 class userView(View):
     def get(self, request):
@@ -279,6 +229,8 @@ class Syllabus(View):
     def post(self, request):
         pass
 
+# LOGIN AND VERIFICATION
+
 class Login(View):
     def get(self, request):
         # request.session.pop("user_username", None)
@@ -287,66 +239,110 @@ class Login(View):
     def post(self, request):
         username = request.POST.get("loginEmail")
         password = request.POST.get("loginPassword")
-        print(username, password)
         message = ""
         users = list(Users.objects.filter(user_username=username))
         if len(users) != 0:
             u = users[0]
             if u.user_password == password:
+                try:
+                    # The key from one of your Verification Apps, found here https://dashboard.sinch.com/verification/apps
+                    applicationKey = "554cffac-3633-4a76-aafd-8dec9c294b2a"
+
+                    # The secret from the Verification App that uses the key above, found here https://dashboard.sinch.com/verification/apps
+                    applicationSecret = "ZDotwc7m30WkVkyjYL284w=="
+
+                    # The number that will receive the SMS. Test accounts are limited to verified numbers.
+                    # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
+                    toNumber = '+14148823039'
+
+                    sinchVerificationUrl = "https://verification.api.sinch.com/verification/v1/verifications"
+
+                    payload = {
+                        "identity": {
+                            "type": "number",
+                            "endpoint": toNumber
+                        },
+                        "method": "sms"
+                    }
+
+                    headers = {"Content-Type": "application/json"}
+
+                    response = requests.post(sinchVerificationUrl, json=payload, headers=headers, auth=(applicationKey, applicationSecret))
+
+                    data = response.json()
+                except Exception as ex:
+                    print("Exception occurred:", ex, data['status'])
                 if u.role == "Admin":
                     request.session["user_username"] = username
-                    return redirect("adminPage")
-                if u.role == "TA":
-                    request.session["user_username"] = username
-                    return redirect("TAView")
-                if u.role == "Instructor":
-                    request.session["user_username"] = username
-                    return redirect("userView")
+                    return redirect("/Verify")
                 if u.role == "SalesAdmin":
-                    request.session["user_username"] = username
-                    return redirect("SalesAdmin")            
+                    request.session["user_username"] = username 
+                    return redirect("/Verify")          
                 if u.role == "Operations":
                     request.session["user_username"] = username
-                    return redirect("Operations")
+                    return redirect("/Verify")
                 if u.role == "SalesRep":
                     request.session["user_username"] = username
-                    return redirect("salesRep")
+                    return redirect("/Verify")
                 if u.role == "HR":
                     request.session["user_username"] = username
-                    return redirect("HR")
-                
- 
+                    return redirect("/Verify")
             else:
                 message = "Invalid Username/Password"
         else:
             message = "Invalid Username/Password"
         return render(request, "login.html", {"message": message})
 
-class Admin(View):
+class verify(View):
     def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
-            return redirect("login")
-
-        courses = list(Courses.objects.all())
-        sections = list(Section.objects.all())
-        users = list(Users.objects.exclude(role="SalesRep"))
-
-        customers = list(Customer.objects.all())
-        order = list(Orders.objects.all())
-        sales = 0
-        for o in order:
-            sales += (o.orderAmount)
-
-       
-        
-        items = list(Items.objects.all())
-        salesreps = list(Users.objects.filter(role="SalesRep"))
-
-
-        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps})
-
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        return render(request, "verify.html", {"user": user})
     def post(self, request):
-        pass
+        u = Users.objects.get(user_username=request.session.get("user_username"))
+        message = ""
+        # The code which was sent to the number.
+        code = request.POST['code']
+
+        # The key from one of your Verification Apps, found here https://dashboard.sinch.com/verification/apps
+        applicationKey = "554cffac-3633-4a76-aafd-8dec9c294b2a"
+
+        # The secret from the Verification App that uses the key above, found here https://dashboard.sinch.com/verification/apps
+        applicationSecret = "ZDotwc7m30WkVkyjYL284w=="
+
+        # The number to which the code was sent. Test accounts are limited to verified numbers.
+        # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
+        toNumber = '+14148823039'
+
+        sinchVerificationUrl = "https://verification.api.sinch.com/verification/v1/verifications/number/" + toNumber
+
+        payload = {
+            "method": "sms",
+            "sms": {
+                "code": code
+            }
+        }
+
+        headers = {"Content-Type": "application/json"}
+
+        response = requests.put(sinchVerificationUrl, json=payload, headers=headers, auth=(applicationKey, applicationSecret))
+
+        data = response.json()
+        if data.get('status') == 'SUCCESSFUL':
+            status = data['status']
+            if status == 'SUCCESSFUL':
+                if u.role == "Admin":
+                    return redirect("adminPage")
+                if u.role == "SalesAdmin":
+                    return redirect("SalesAdmin")            
+                if u.role == "Operations":
+                    return redirect("Operations")
+                if u.role == "SalesRep":
+                    return redirect("salesRep")
+                if u.role == "HR":
+                    return redirect("HR")
+        else:
+            error_message = data.get('message', 'Verification Failed. Please try again.')
+            return render(request, "verify.html", {"message": error_message, "user": u})
 
 # USER ADD/DELETE
 
@@ -420,6 +416,59 @@ class DeleteUsers(View):
         Users.objects.get(id=request.POST['User']).delete()
         return redirect('/adminPage')
 
+# PERSONAL INFO
+
+class AddPersonalInfo(View):
+    def get(self, request, user_id):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "HR"):
+            return redirect("login")
+
+        # make sure the request is for a valid user that exists
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
+        except Exception as ex:
+            return redirect("login")
+
+        return render(request, "personalInfo.html", {"user": user, "role": role, "user_id": user_id})
+
+    def post(self, request):
+        pi = None
+        name = None
+        add = None
+        p_num = None
+        email = None
+        try:
+            name = request.POST.get('name')
+            add = request.POST.get('address')
+            city = request.POST.get('city')
+            state = request.POST.get('state')
+            zip = request.POST.get('zip')
+            p_num = request.POST.get('PhoneNumber')
+            email = request.POST.get('email')
+
+            # validation
+            # errors = validate.checkPersonalInfoPost(name=name, address=address, phoneNumber=p_num, email=email)
+            # if len(errors) > 0:
+            #     error_msg = 'Please correct the following: '
+            #     for error in errors:
+            #         error_msg += error + '. '
+            #     return render(request, "personalInfo.html", {"message": error_msg})
+
+        except Exception as ex:
+            return render(request, "personalInfo.html", {"message": 'Something went wrong, check your information.'})
+
+        pi, created = PersonalInfo.objects.get_or_create(
+            myName=name,
+            defaults={'address': add, 'phoneNumber': p_num, 'email': email}
+        )
+        if not created:
+            # If PersonalInfo already exists, update it
+            PersonalInfo.objects.filter(id=pi.id).update(myName=name, address=add, city=city, state=state, zip=zip, phoneNumber=p_num, email=email)
+
+        return redirect('/HR')
+
+
 #CUSTOMER ADD/EDIT + DELETE
 
 class AddCustomer(View):
@@ -440,7 +489,8 @@ class AddCustomer(View):
     def post(self, request):
         # Retrieve and validate customer data from the POST request
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        cusName = request.POST.get('cusName')
+        cusFirstName = request.POST.get('cusFirstName')
+        cusLastName = request.POST.get('cusLastName')
         cusAddress = request.POST.get('cusAddress')
         cusCity = request.POST.get('cusCity')
         cusState = request.POST.get('cusState')
@@ -448,6 +498,9 @@ class AddCustomer(View):
         phoneNumber = request.POST.get('phoneNumber')
         email = request.POST.get('email')
 
+        phone = str(phoneNumber)
+        username = cusFirstName[0] + cusLastName
+        password = cusLastName + phone[2:]
         # Perform validation using your validation module (if needed)
         # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
         # Check for validation errors
@@ -459,7 +512,7 @@ class AddCustomer(View):
 
         try:
             # Create a new Customer instance and save it to the database
-            customer = Customer(cusName=cusName, cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, cusZip=cusZip, phoneNumber=phoneNumber, email=email)
+            customer = Customer(cusFirstName=cusFirstName, cusLastName=cusLastName, cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, cusZip=cusZip, phoneNumber=phoneNumber, email=email)
             customer.save()
             
             print(customer.id)
@@ -482,9 +535,8 @@ class DeleteCustomer(View):
     def post(self, request):
         Customer.objects.get(id=request.POST['Customer']).delete()
         return redirect('/adminPage')
-    
 
-# ORDER ADD/EDIT + DELETE + VIEW
+# ORDER ADD/EDIT + DELETE + VIEW + PROCESS
 
 class AddOrder(View):
     def get(self, request):
@@ -535,7 +587,7 @@ class AddOrder(View):
                     
                     # Temporarily save the order to associate it with order items
                     order.save()
-
+                    order_items = []
                     # Create order items and calculate the total amount
                     for form in formset.cleaned_data:
                         if form:
@@ -546,17 +598,33 @@ class AddOrder(View):
                                 item_price = item.ItemPrice
                                 order_amount += item_price * quantity
                                 order_item.save()
+                                order_items.append(order_item)
 
                     order.orderAmount = order_amount
                     order.save()
 
+                    # Send Text Message
+                    sinch_client = Client(
+                        key_id="68db7cad-c377-4a64-a223-ad2a534ee18c",
+                        key_secret="PJBGjR6Gno-3rWl-t_OSIPFub~",
+                        project_id="26137e24-6715-4df3-936c-7005ff1c9945"
+                    )
+
+                    phone = "1"+ str(customer.phoneNumber)
+                    sinch_client.sms.batches.send(
+                        body="Hello from BWMSoln!/n Your Order has been successfully placed. The Total ammount is " + str(order_amount) + "." 
+                        "/nYou will receive a notification when your order has been processed. Thank you for shopping with us!",
+                        to=[phone],
+                        from_="12085810216",
+                        delivery_report="none"
+                    )
+                    
+                    # Send Email
                     try: 
                         subject = "Order Confirmation"
                         context = {
                             'customer_name': customer.cusName, 
-                            'item_name': order_item.item.ItemName,  
-                            'item_quantity': order_item.quantity,
-                            'item_price': order_item.item.ItemPrice,
+                            'order_items': order_items,
                             'total_amount': order_amount,
                         }
                         html_content = render_to_string('orderConfirmation.html', context)
@@ -634,7 +702,6 @@ class ViewOrders(View):
         # Render the view specific order template with order details and items
         return render(request, "viewSpecificOrder.html", {"order": order, "order_items": order_items, "user": user})
 
-
 class OrderItemsForm(forms.ModelForm):
     class Meta:
         model = OrderItems
@@ -653,7 +720,6 @@ class OrderItemsForm(forms.ModelForm):
 
         return cleaned_data
 
-
 class ProcessOrder(View):
     def get(self, request):
         # Fetch all orders
@@ -666,7 +732,24 @@ class ProcessOrder(View):
         order_id = request.POST.get('Order')
         order = Orders.objects.get(id=order_id)
         order_items = OrderItems.objects.filter(order=order)
-       
+        customer = order.Customer
+        # Send Text Message
+        sinch_client = Client(
+        key_id="68db7cad-c377-4a64-a223-ad2a534ee18c",
+        key_secret="PJBGjR6Gno-3rWl-t_OSIPFub~",
+        project_id="26137e24-6715-4df3-936c-7005ff1c9945"
+        )
+
+        phone = "1"+ str(customer.phoneNumber)
+        sinch_client.sms.batches.send(
+        body="Hello from Sahil Inc.! Your Order has been processed. The Total ammount is " + str(order.orderAmount) + "." 
+            "Thank you for shopping with us!",
+        to=[phone],
+        from_="12085810216",
+        delivery_report="none"
+        )
+
+
         # Prepare email content
         try: 
             subject = "Order Processed"
@@ -710,16 +793,41 @@ class DeleteOrder(View):
         order_id = request.POST.get('Order')
         order = Orders.objects.get(id=order_id)
         print(order)
-        order_items = OrderItems.objects.get(order=order)
+        order_items = OrderItems.objects.filter(order=order)
         print(order_items)
+
+        # Send Text Message
+        customer = order.Customer
+        sinch_client = Client(
+        key_id="68db7cad-c377-4a64-a223-ad2a534ee18c",
+        key_secret="PJBGjR6Gno-3rWl-t_OSIPFub~",
+        project_id="26137e24-6715-4df3-936c-7005ff1c9945"
+        )
+
+        phone = "1"+ str(customer.phoneNumber)
+        sinch_client.sms.batches.send(
+        body="Hello from Sahil Inc.! We would like to inform you that your order has been canceled." + 
+            "While we regret doing business with you, we hope you will choose us again in the future.",
+        to=[phone],
+        from_="12085810216",
+        delivery_report="none"
+        )
+
+
         # Prepare email content
         try: 
             subject = "Order Cancellation"
+            order_details = []
+            for order_item in order_items:
+                order_details.append({
+                    'item_name': order_item.item.ItemName,
+                    'item_quantity': order_item.quantity,
+                    'item_price': order_item.item.ItemPrice
+                })
+
             context = {
-                'customer_name': order.Customer.cusName, 
-                'item_name': order_items.item.ItemName,  
-                'item_quantity': order_items.quantity,
-                'item_price': order_items.item.ItemPrice,
+                'customer_name': order.Customer.cusName,
+                'order_details': order_details,
                 'total_amount': order.orderAmount,
             }
 
@@ -739,6 +847,7 @@ class DeleteOrder(View):
             print("Error sending email", ex)
 
         # Delete the order after sending the email
+        order_items.delete()
         order.delete()
 
         if user.role == "Admin":
@@ -821,6 +930,7 @@ class DeleteItem(View):
             # elif user.role == "Operations":
             #     return redirect('/OpeartionsView')
 
+# ADD SALESREP USER
 
 class addSalesRep(View):
     def get(self, request):
@@ -917,6 +1027,33 @@ class deleteSalesReps(View):
 
         return render(request, "deleteSalesReps.html", {"user": user})
     
+# ADMIN FUNCTIONALITY
+
+class Admin(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
+            return redirect("login")
+
+        courses = list(Courses.objects.all())
+        sections = list(Section.objects.all())
+        users = list(Users.objects.exclude(role="SalesRep"))
+
+        customers = list(Customer.objects.all())
+        order = list(Orders.objects.all())
+        sales = 0
+        for o in order:
+            sales += (o.orderAmount)
+
+       
+        
+        items = list(Items.objects.all())
+        salesreps = list(Users.objects.filter(role="SalesRep"))
+
+        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps})
+
+    def post(self, request):
+        pass
+
 # Sales Functionality
 
 class SalesAdmin(View):
@@ -957,6 +1094,40 @@ class salesRep(View):
     def post(self, request):
         pass
 
+class Navigate(View):
+    def get(self, request, customer_id):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        customer = Customer.objects.get(id=customer_id)
+
+        customer_address = f"{customer.cusAddress}, {customer.cusCity}, {customer.cusState}, {customer.cusZip}"    
+        user_address = f"{user.info.address}, {user.info.city}, {user.info.state}, {user.info.zip}"
+
+        customer_location = self.geocode_address(customer_address)
+        user_location = self.geocode_address(user_address)
+
+        context = {
+            'user_lat': user_location['lat'],
+            'user_lng': user_location['lng'],
+            'customer_lat': customer_location['lat'],
+            'customer_lng': customer_location['lng'], 
+            'cusAdd': customer_address, 
+            'customer': customer
+        }
+
+        return render(request, "navigate.html", context)
+
+    def geocode_address(self, address):
+        api_file = open("Syllabus_Project/API_key.txt", "r")
+        api_key = api_file.read()
+        api_file.close()
+        api_key = "AIzaSyD6v15JNhOvb1ex_lELHwV6RqF3DUBq-hQ"
+        url = f"https://maps.googleapis.com/maps/api/geocode/json?address={urllib.parse.quote(address)}&key={api_key}"
+        response = requests.get(url).json()
+        if response['status'] == 'OK':
+            return response['results'][0]['geometry']['location']
+        else:
+            return {'lat': 0, 'lng': 0}  # Default coordinates or error handling
+
 # Operations Functionality
 
 class Operations(View):
@@ -994,42 +1165,6 @@ class HR(View):
     
     def post(self, request):
         pass
-
-
-class Navigate(View):
-    def get(self, request, customer_id):
-        user = Users.objects.get(user_username=request.session.get("user_username"))
-        customer = Customer.objects.get(id=customer_id)
-
-        customer_address = f"{customer.cusAddress}, {customer.cusCity}, {customer.cusState}, {customer.cusZip}"    
-        user_address = f"{user.info.address}, {user.info.city}, {user.info.state}, {user.info.zip}"
-
-        customer_location = self.geocode_address(customer_address)
-        user_location = self.geocode_address(user_address)
-
-        context = {
-            'user_lat': user_location['lat'],
-            'user_lng': user_location['lng'],
-            'customer_lat': customer_location['lat'],
-            'customer_lng': customer_location['lng'], 
-            'cusAdd': customer_address, 
-            'customer': customer
-        }
-
-        return render(request, "navigate.html", context)
-
-    def geocode_address(self, address):
-        api_file = open("Syllabus_Project/API_key.txt", "r")
-        api_key = api_file.read()
-        api_file.close()
-        api_key = "AIzaSyD6v15JNhOvb1ex_lELHwV6RqF3DUBq-hQ"
-        url = f"https://maps.googleapis.com/maps/api/geocode/json?address={urllib.parse.quote(address)}&key={api_key}"
-        response = requests.get(url).json()
-        if response['status'] == 'OK':
-            return response['results'][0]['geometry']['location']
-        else:
-            return {'lat': 0, 'lng': 0}  # Default coordinates or error handling
-
 
 class ViewEmployeeInfo(View):
     def get(self, request):

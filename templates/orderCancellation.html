@@ -69,18 +69,20 @@
         </div>
 
         <p>Dear {{ customer_name }},</p>
-        <p>We regret to inform you that your order has been cancelled. Here were the details of your order:</p>
+        <p>We regret to inform you that your order has been cancelled. Here are the details of your order:</p>
         <table>
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
                 <th>Price</th>
             </tr>
-            <tr>
-                <td>{{ item_name }}</td>
-                <td>{{ item_quantity }}</td>
-                <td>${{ item_price }}</td>
-            </tr>
+            {% for detail in order_details %}
+                <tr>
+                    <td>{{ detail.item_name }}</td>
+                    <td>{{ detail.item_quantity }}</td>
+                    <td>${{ detail.item_price }}</td>
+                </tr>
+            {% endfor %}
         </table>
         <p class="total-amount">Total Order Amount: ${{ total_amount }}</p>
     </div>

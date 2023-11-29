@@ -51,9 +51,9 @@
                 {% for order in orders %}
                 <tr>
                     <td>{{ order.orderNum }}</td>
-                    <td>{{ order.Customer.cusName }}</td>
+                    <td>{{ order.Customer.cusFirstName }} {{ order.Customer.cusLastName }}</td>
                     <td>{{ order.orderDate }}</td>
-                    <td>{{ order.orderAmount }}</td>
+                    <td>$ {{ order.orderAmount }}</td>
                     <td>{{ order.status }}</td>
                 </tr>
                 {% endfor %}
@@ -112,7 +112,7 @@
                 <tr>
                     <td>{{ item.ItemName }}</td>
                     <td>{{ item.ItemNumber }}</td>
-                    <td>{{ item.ItemPrice }}</td>
+                    <td>$ {{ item.ItemPrice }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

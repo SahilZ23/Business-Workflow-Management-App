@@ -21,7 +21,7 @@
 
     <div class="container mt-4">
         <h1>Customer Details</h1>
-        <p><strong>Customer Name:</strong> {{ customer.cusName }}</p>
+        <p><strong>Customer Name:</strong> {{ customer.cusFirstName }} {{ customer.cusLastName }} </p>
         <p><strong>Customer Phone:</strong> {{ customer.phoneNumber }}</p> <!-- Assuming Customer model has 'name' field -->
         <p><strong>Customer Email:</strong> {{ customer.email }}</p>
         <p><strong>Customer Address:</strong> {{ cusAdd }}</p>
@@ -31,9 +31,13 @@
     <div class="container mt-4">
         <div id="map"></div>
         <br>
-        <button onclick="getDirectionsCurrentLoc()" class="btn btn-primary mb-3">Get Directions</button>
-        <button onclick="getDirections()" class="btn btn-primary mb-3">Get Directions from Home</button>
-        <button onclick="window.location.href='/salesRep';" class="btn btn-primary mb-3">Back</button>
+        <button onclick="getDirectionsCurrentLoc()" class="btn btn-primary mb-3">Get Directions from Current Location
+            <svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.--><path fill="#ffffff" d="M256 0c17.7 0 32 14.3 32 32V66.7C368.4 80.1 431.9 143.6 445.3 224H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H445.3C431.9 368.4 368.4 431.9 288 445.3V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V445.3C143.6 431.9 80.1 368.4 66.7 288H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H66.7C80.1 143.6 143.6 80.1 224 66.7V32c0-17.7 14.3-32 32-32zM128 256a128 128 0 1 0 256 0 128 128 0 1 0 -256 0zm128-80a80 80 0 1 1 0 160 80 80 0 1 1 0-160z"/></svg>
+        </button>
+        <button onclick="getDirections()" class="btn btn-primary mb-3">Get Directions from Home
+            <svg xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.--><path fill="#eff1f5" d="M429.6 92.1c4.9-11.9 2.1-25.6-7-34.7s-22.8-11.9-34.7-7l-352 144c-14.2 5.8-22.2 20.8-19.3 35.8s16.1 25.8 31.4 25.8H224V432c0 15.3 10.8 28.4 25.8 31.4s30-5.1 35.8-19.3l144-352z"/></svg>
+        </button>
+        <button onclick="window.location.href='/salesRep';" class="btn btn-primary mb-3">Back<i class="fa-light fa-arrow-left" style="color: #24a20b;"></i></button>
     </div>
 
     <script>

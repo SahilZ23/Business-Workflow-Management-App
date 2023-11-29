@@ -56,7 +56,10 @@ class Items(models.Model):
         return f"{self.ItemName}"
 
 class Customer(models.Model):
-    cusName = models.CharField(max_length=40)
+    cusFirstName = models.CharField(max_length=40)
+    CusLastName = models.CharField(max_length=40, default="")
+    cusUsername = models.CharField(max_length=80, default=str(cusFirstName) + str(CusLastName))
+    cusPassword = models.CharField(max_length=40, default=str(cusFirstName) + str(CusLastName))
     # Can have an Office
     cusAddress = models.CharField(max_length=20, null=True, blank=True)
     cusCity = models.CharField(max_length=15, null=True, blank=True)
