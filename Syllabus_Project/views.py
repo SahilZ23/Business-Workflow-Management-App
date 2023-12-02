@@ -20,215 +20,6 @@ validate = Validations()
 
 # Create your views here.
 
-class AddCourse(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
-            return redirect("login")
-
-        users = Users.objects.all()
-        return render(request, "addCourse.html", {"users": users})
-
-    def post(self, request):
-        course_name = request.POST.get('course')
-        course_num = request.POST.get('courseNumber')
-        sem = request.POST.get('semester')
-        year = request.POST.get('year')
-
-        errors = validate.checkCoursePost(course_name, course_num, year, sem)
-        if len(errors) != 0:
-            return render(request, "addCourse.html", {"users": Users.objects.all(), "errors": errors})
-        else:
-            if Courses.objects.filter(courseNumber=course_num).exists():
-                Courses.objects.filter(courseNumber=course_num).update(courseName=course_name,
-                                                                       semester=sem,
-                                                                       year=year
-                                                                       )
-                message = "Successfully edited a course"
-
-            else:
-                course = Courses(courseName=course_name, courseNumber=course_num, semester=sem, year=year)
-                course.save()
-
-                message = "Successfully created a course"
-
-            return render(request, "admin.html",
-                          {"message": message, "courses": Courses.objects.all(), "users": Users.objects.all(),
-                           "sections": Section.objects.all()})
-
-class userView(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Instructor"):
-            return redirect("login")
-
-        courses = list(Section.objects.filter(users__user_username=request.session.get("user_username")))
-        return render(request, "userView.html", {"courses": courses})
-
-    def post(self, request):
-        pass
-
-class TAView(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "TA"):
-            return redirect("login")
-
-        courses = list(Section.objects.filter(users__user_username=request.session.get("user_username")))
-        return render(request, "TApage.html", {"courses": courses})
-
-    def post(self, request):
-        pass
-
-class Policy(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Instructor"):
-            return redirect("login")
-
-        courses = list(Section.objects.filter(users__user_username=request.session.get("user_username")))
-
-        return render(request, "addPolicy.html", {'courses': courses})
-
-    def post(self, request):
-        try:
-            policy_name = request.POST.get('policyName')
-            policies = request.POST.get('policyText')
-            course_id = request.POST.get('course')
-
-            user = Users.objects.get(user_username=request.session.get('user_username'))
-            course = Courses.objects.get(id=course_id)
-
-            if not validate.userCanAddPolicy(user, course):
-                return render(request, "addPolicy.html", {
-                    'courses': list(Section.objects.filter(users__user_username=request.session.get("user_username"))),
-                    'error': "User is not the instructor for the selected course. Policy change denied."})
-
-            # add or edit policy
-            if len(Policies.objects.filter(policy_course=course, policy_user=user)) > 0:
-                policy_obj = Policies.objects.get(policy_course=course, policy_user=user)
-                policy_obj.policies = policies
-                policy_obj.policy_name = policy_name
-                policy_obj.save()
-            else:
-                Policies.objects.create(policy_name=policy_name, policies=policies, policy_user=user,
-                                        policy_course=course)
-
-            courses = list(Section.objects.filter(users__user_username=request.session.get("user_username")))
-            return render(request, "userView.html", {"courses": courses})
-
-        except Policies.MultipleObjectsReturned:
-            return render(request, "addPolicy.html", {
-                'courses': list(Section.objects.filter(users__user_username=request.session.get("user_username"))),
-                'error': "Error: the database has multiple policies for this course and user, please connect to the database and delete the duplicates."})
-        
-        except Exception as ex:
-            return render(request, "addPolicy.html", {
-                'courses': list(Section.objects.filter(users__user_username=request.session.get("user_username"))),
-                'error': "An error occurred, please check your inputs."})
-
-class AddSection(View):
-    def get(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
-            return redirect("login")
-
-        courses = list(Courses.objects.all())
-        users = list(Users.objects.all())
-
-        return render(request, "addSection.html", {'courses': courses, 'users': users})
-
-    def post(self, request):
-        if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
-            return redirect("login")
-
-        # get variables
-        try:
-            sectionNumber = request.POST["sectionNumber"]
-            startTime = request.POST['startTime']
-            endTime = request.POST['endTime']
-            daysString = ""
-            room = request.POST['sectionRoom']
-            course = Courses.objects.get(id=request.POST['Course'])
-            user = Users.objects.get(id=request.POST['User'])
-
-            # read the days checkboxes
-            days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-            for day in days:
-                if day in request.POST.keys():
-                    if len(daysString) != 0:
-                        daysString += ', '
-                    daysString += day
-
-            error = Validations.checkSectionPost(self, course, user)
-            print(error)
-            if len(error) > 0:
-                return render(request, "addSection.html", {'courses': list(Courses.objects.all()), 'users': list(Users.objects.all()), 'error': error})
-
-            if Section.objects.filter(section_number=sectionNumber).exists():
-
-                sect = Section.objects.filter(section_number=sectionNumber).update(timeFrom=startTime,
-                                                                                   timeTo=endTime,
-                                                                                   class_room=room,
-                                                                                   day=daysString,
-                                                                                   courses=course,
-                                                                                   users=user)
-                print("Section exists", sect)
-
-            else:
-                sect = Section(section_number=sectionNumber,
-                               timeFrom=startTime,
-                               timeTo=endTime,
-                               class_room=room,
-                               day=daysString,
-                               courses=course,
-                               users=user)
-
-                sect.save()
-
-        except Exception as ex:
-            courses = list(Courses.objects.all())
-            users = list(Users.objects.all())
-            return render(request, "addSection.html",
-                          {'courses': courses, 'users': users, 'error': 'Form response missing inputs: ' + str(ex)})
-
-        return Admin.get(self, request)
-
-class DeleteCourses(View):
-    def get(self, request):
-        courses = list(Courses.objects.all())
-        return render(request, "deleteCourses.html", {"courses": courses})
-
-    def post(self, request):
-        Courses.objects.get(id=request.POST['Course']).delete()
-        return redirect('/adminPage')
-
-class DeleteSections(View):
-    def get(self, request):
-        sections = list(Section.objects.all())
-        return render(request, "deleteSection.html", {"sections": sections})
-
-    def post(self, request):
-        Section.objects.get(id=request.POST['Section']).delete()
-        return redirect('/adminPage')
-
-class Syllabus(View):
-    def get(self, request, year, semester, courseNumber):
-        try:
-            section = Section.objects.get(courses__courseNumber=courseNumber,
-                                          courses__semester=semester, courses__year=year, users__role="Instructor")
-            course = section.courses
-            labs = Section.objects.filter(courses=course, users__role="TA")
-            info = section.users.info
-            policies = Policies.objects.filter(policy_course__courseNumber=courseNumber)
-
-            return render(request, "syllabus.html", {"section": section, "course": course,
-                                                     "info": info, "policies": policies, "labs": labs})
-
-        except Section.DoesNotExist:
-            return render(request, "syllabus.html", {
-                'error': "Not found. Either the year, semester or course you are looking for does not exist, "
-                         "or the syllabus has not been created yet."})
-
-    def post(self, request):
-        pass
-
 # LOGIN AND VERIFICATION
 
 class Login(View):
@@ -287,6 +78,9 @@ class Login(View):
                 if u.role == "HR":
                     request.session["user_username"] = username
                     return redirect("/Verify")
+                if u.role == "cus":
+                    request.session["user_username"] = username
+                    return redirect("/Verify")
             else:
                 message = "Invalid Username/Password"
         else:
@@ -340,6 +134,8 @@ class verify(View):
                     return redirect("salesRep")
                 if u.role == "HR":
                     return redirect("HR")
+                if u.role == "cus":
+                    return redirect("customer")
         else:
             error_message = data.get('message', 'Verification Failed. Please try again.')
             return render(request, "verify.html", {"message": error_message, "user": u})
@@ -497,10 +293,9 @@ class AddCustomer(View):
         cusZip = request.POST.get('cusZip')
         phoneNumber = request.POST.get('phoneNumber')
         email = request.POST.get('email')
-
-        phone = str(phoneNumber)
-        username = str(cusFirstName) + str(cusLastName)
-        password = str(cusLastName) + str(phone)
+        
+        
+        
         # Perform validation using your validation module (if needed)
         # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
         # Check for validation errors
@@ -511,13 +306,48 @@ class AddCustomer(View):
         #     return render(request, "customer_form.html", {"message": error_msg})
 
         try:
-            # Create a new Customer instance and save it to the database
-            customer = Customer(cusFirstName=cusFirstName, CusLastName=cusLastName,
-                                cusUsername=username, cusPassword=password, 
-                                cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, 
-                                cusZip=cusZip, phoneNumber=phoneNumber, email=email)
-            customer.save()
-            
+            # Generate username and password
+            username = cusFirstName[0].lower() + cusLastName.lower()
+            password = cusLastName[0].lower() + phoneNumber
+            with transaction.atomic():
+                # Create a new Users instance with the role "Customer"
+                user_role = "cus"
+                cus_user = Users.objects.create(
+                    user_username=username,
+                    user_password=password,
+                    role=user_role
+                )
+
+                # Create a new Customer instance and save it to the database
+                customer = Customer(cusFirstName=cusFirstName, CusLastName=cusLastName,
+                                    user = cus_user,
+                                    cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, 
+                                    cusZip=cusZip, phoneNumber=phoneNumber, email=email)
+                customer.save()
+
+            # Send Email about account creation
+            try: 
+                subject = "Welcome to Our Service"
+                context = {
+                    'customer_name': customer.cusFirstName, 
+                    'customer_username': username,  # Assuming username variable holds the username
+                    'customer_password': password,  # Assuming password variable holds the password
+                }
+                html_content = render_to_string('customerWelcome.html', context)
+                text_content = strip_tags(html_content)  # Fallback for plain text email clients
+                                
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_content,
+                    from_email=settings.EMAIL_HOST_USER,
+                    to=[str(customer.email)]
+                )
+                email.attach_alternative(html_content, "text/html")
+                email.send()
+
+            except Exception as ex:
+                print("Email sending failed: ", ex)
+
             print(customer.id)
             if user.role == "Admin":
                 return redirect('/adminPage')
@@ -526,7 +356,6 @@ class AddCustomer(View):
             elif user.role == "SalesRep":
                 return redirect("salesRep")
             
-
         except Exception as ex:
             print(ex)
             return render(request, "addCustomer.html", {"message": 'Something went wrong, check your information.'})
@@ -617,8 +446,8 @@ class AddOrder(View):
 
                     phone = "1"+ str(customer.phoneNumber)
                     sinch_client.sms.batches.send(
-                        body="Hello from BWMSoln!/n Your Order has been successfully placed. The Total ammount is " + str(order_amount) + "." 
-                        "/nYou will receive a notification when your order has been processed. Thank you for shopping with us!",
+                        body="Hello from BWMSoln! Your Order has been successfully placed. The Total ammount is " + str(order_amount) + "." 
+                        "You will receive a notification when your order has been processed. Thank you for shopping with us!",
                         to=[phone],
                         from_="12085810216",
                         delivery_report="none"
@@ -627,8 +456,9 @@ class AddOrder(View):
                     # Send Email
                     try: 
                         subject = "Order Confirmation"
+                        name = customer.cusFirstName + " " + customer.CusLastName
                         context = {
-                            'customer_name': customer.cusName, 
+                            'customer_name': name, 
                             'order_items': order_items,
                             'total_amount': order_amount,
                         }
@@ -758,8 +588,9 @@ class ProcessOrder(View):
         # Prepare email content
         try: 
             subject = "Order Processed"
+            name = order.Customer.cusFirstName + " " + order.Customer.CusLastName
             context = {
-                'customer_name': order.Customer.cusName, 
+                'customer_name': name, 
                 'order_items': order_items,
                 'total_amount': order.orderAmount,
             }
@@ -829,9 +660,9 @@ class DeleteOrder(View):
                     'item_quantity': order_item.quantity,
                     'item_price': order_item.item.ItemPrice
                 })
-
+            name = order.Customer.cusFirstName + " " + order.Customer.CusLastName
             context = {
-                'customer_name': order.Customer.cusName,
+                'customer_name': name,
                 'order_details': order_details,
                 'total_amount': order.orderAmount,
             }

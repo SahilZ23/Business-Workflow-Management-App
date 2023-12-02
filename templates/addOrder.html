@@ -25,7 +25,7 @@
                 <label for="Customer">Customer:</label>
                 <select id="Customer" name="Customer" class="form-control" required>
                     {% for customer in customers %}
-                        <option value="{{ customer.id }}">{{ customer.cusName }}</option>
+                        <option value="{{ customer.id }}">{{ customer.cusFirstName }} {{customer.CusLastName}}</option>
                     {% endfor %}
                 </select>
             </div>

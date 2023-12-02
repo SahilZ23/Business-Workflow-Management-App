@@ -22,9 +22,7 @@ ROLES = (
     ("SalesAdmin", "SalesAdmin"),
     ("HR", "HR"),
     ("Operations", "Operations"),
-    # REMOVE
-    ("TA", "TA"),
-    ("Instructor", "Instructor")
+    ("cus", "cus"),
 )
 
 class Users(models.Model):
@@ -58,8 +56,7 @@ class Items(models.Model):
 class Customer(models.Model):
     cusFirstName = models.CharField(max_length=40)
     CusLastName = models.CharField(max_length=40, default="")
-    cusUsername = models.CharField(max_length=80, default=str(cusFirstName) + str(CusLastName))
-    cusPassword = models.CharField(max_length=40, default=str(cusFirstName) + str(CusLastName))
+    user = models.ForeignKey(Users, null=True, on_delete=models.CASCADE)
     # Can have an Office
     cusAddress = models.CharField(max_length=20, null=True, blank=True)
     cusCity = models.CharField(max_length=15, null=True, blank=True)

@@ -17,8 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin,  AddUser, DeleteUsers,  AddCustomer, SalesAdmin, DeleteCustomer, \
      AddOrder, DeleteOrder, ViewOrders, AddItemView, DeleteItem, addSalesRep, deleteSalesReps, Operations,salesRep, HR, \
-     ViewEmployeeInfo, DeleteCourses, DeleteSections,AddCourse, userView, TAView, AddPersonalInfo, Navigate, AddSection, Policy, \
-     ProcessOrder, verify
+     ViewEmployeeInfo, AddPersonalInfo, Navigate,ProcessOrder, verify
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -41,19 +40,10 @@ urlpatterns = [
     path('Operations', Operations.as_view(), name="Operations"),
     path('salesRep', salesRep.as_view(), name="salesRep"),
     path('HR', HR.as_view(), name="HR"),
+    # path('customer', Customer.as_view(), name="customer"),
     path('viewEmployee', ViewEmployeeInfo.as_view(), name="viewEmployee"),
     path('AddPersonalInfo/<uuid:user_id>/', AddPersonalInfo.as_view(), name='AddPersonalInfo'),
     path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
     path('Navigate/<int:customer_id>/', Navigate.as_view(), name="Navigate"),
     path('ProcessOrder/', ProcessOrder.as_view(), name="ProcessOrder"),
-    # REMOVE THESE ONCE EVERYTHING IS COMPLETE
-        # path('addCourse', AddCourse.as_view(), name="addcourse"),
-        # path('addSection', AddSection.as_view(), name="addSection"),
-        # path('userView', userView.as_view(), name="userView"),
-        # path('TAView', TAView.as_view(), name="TAView"),
-
-        # path('addPolicy', Policy.as_view(), name='AddPolicy'),
-        # path('deleteCourse', DeleteCourses.as_view(), name='deleteCourse'),
-        # path('deleteSection', DeleteSections.as_view(), name='deleteSection'),
-        #re_path(r'^syllabus/(?P<year>[0-9]{4})/(?P<semester>[a-zA-Z]+)/(?P<courseNumber>[0-9]{3})', Syllabus.as_view(), name="syllabus")
-]
+   ]
