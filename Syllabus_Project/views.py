@@ -499,8 +499,8 @@ class AddCustomer(View):
         email = request.POST.get('email')
 
         phone = str(phoneNumber)
-        username = cusFirstName[0] + cusLastName
-        password = cusLastName + phone[2:]
+        username = str(cusFirstName) + str(cusLastName)
+        password = str(cusLastName) + str(phone)
         # Perform validation using your validation module (if needed)
         # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
         # Check for validation errors
@@ -512,7 +512,10 @@ class AddCustomer(View):
 
         try:
             # Create a new Customer instance and save it to the database
-            customer = Customer(cusFirstName=cusFirstName, cusLastName=cusLastName, cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, cusZip=cusZip, phoneNumber=phoneNumber, email=email)
+            customer = Customer(cusFirstName=cusFirstName, CusLastName=cusLastName,
+                                cusUsername=username, cusPassword=password, 
+                                cusAddress=cusAddress, cusCity=cusCity, cusState=cusState, 
+                                cusZip=cusZip, phoneNumber=phoneNumber, email=email)
             customer.save()
             
             print(customer.id)
@@ -525,6 +528,7 @@ class AddCustomer(View):
             
 
         except Exception as ex:
+            print(ex)
             return render(request, "addCustomer.html", {"message": 'Something went wrong, check your information.'})
         
 class DeleteCustomer(View):
@@ -533,7 +537,8 @@ class DeleteCustomer(View):
         return render(request, "deleteCustomer.html", {"customers": customers})
 
     def post(self, request):
-        Customer.objects.get(id=request.POST['Customer']).delete()
+        customer_id = request.POST.get('Customer')
+        Customer.objects.get(id=customer_id).delete()
         return redirect('/adminPage')
 
 # ORDER ADD/EDIT + DELETE + VIEW + PROCESS

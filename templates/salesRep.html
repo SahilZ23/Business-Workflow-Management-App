@@ -33,7 +33,7 @@
       <tbody>
         {% for customer in customers %}
         <tr>
-          <td>{{ customer.cusName }}</td>
+          <td>{{ customer.cusFirstName }} {{ customer.CusLastName }}</td>
           <td>
             {{ customer.cusAddress|default_if_none:"" }}{% if customer.cusAddress %}, {% endif %}
             {{ customer.cusCity|default_if_none:"" }}{% if customer.cusCity %}, {% endif %}

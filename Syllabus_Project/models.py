@@ -70,7 +70,7 @@ class Customer(models.Model):
     email = models.EmailField(null=False, blank=False)
 
     def __str__(self):
-        return f"{self.cusName}"
+        return f"{self.cusFirstName}"
     
 ### Create a model for the Inventory
 class Items(models.Model):
@@ -84,7 +84,7 @@ class Items(models.Model):
 ### Create a modelfor the orders placed
 class Orders(models.Model):
     orderNum = models.IntegerField(unique=True)
-    Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
+    Customer = models.ForeignKey(Customer, null =True, on_delete=models.SET_NULL)
     orderDate = models.DateField()
     orderAmount = models.DecimalField(max_digits=8, decimal_places=2)
     status = models.CharField(max_length=10, default="Placed", null=False, blank=False)

@@ -19,10 +19,11 @@
         <label for="CustomersLabel">Customer :</label>
         <select id="CustomersLabel" name="Customer">
             {% for customer in customers %}
-                <option value="{{ customer.id }}">{{ customer.cusName }}</option>
+                <option value="{{ customer.id }}">{{ customer.cusFirstName }} {{ customer.CusLastName }}</option>
             {% endfor %}
-        </select><br>
-
+        </select>
+        <br>
+        <br>
         <button type="submit" class="btn btn-danger">Delete Customer</button>
         <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
     </form>
