@@ -1,110 +1,97 @@
 <!DOCTYPE html>
 <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width">
-      <title>Add/Edit User</title>
-      <link rel="stylesheet" href="static/css/bootstrap.css">
-      <link href="static/style.css" rel="stylesheet" type="text/css" />
-    </head>
-    <body>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Add/Edit User</title>
+	<link rel="stylesheet" href="static/css/bootstrap.css">
+	<link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
 	<div>
 		<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                  <li class="nav-item">
-                    {% if role == "Admin" %}
-                    <a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
-                    {% elif role == "SalesAdmin" %}
-                        <a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
-                    {% elif role == "Operations" %}
-                        <a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
-                    {% elif role == "SalesRep" %}
-                        <a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
-                    {% elif role == "HR" %}
-                        <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
-                    {% elif role == "cus" %}
-                        <a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
-                    {% endif %}
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/">Logout</a>
-                  </li>
-                </ul>
-              </div>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<a class="navbar-brand" href="#">Add User</a>
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item">
+						{% if role == "Admin" %}
+						<a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
+						{% elif role == "SalesAdmin" %}
+						<a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
+						{% elif role == "Operations" %}
+						<a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
+						{% elif role == "SalesRep" %}
+						<a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
+						{% elif role == "HR" %}
+						<a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
+						{% elif role == "cus" %}
+						<a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
+						{% endif %}
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/">Logout</a>
+					</li>
+				</ul>
+			</div>
 	</div>
-    
-      <form action="{% url 'adduser' %}" method="post" class="pane-center">
-	{% csrf_token %}
-	<h1 class="h4 mb-3 font-weight-normal">Enter User Information</h1>
-          {% if message %}
-            <div class="alert alert-danger">{{ message }}</div>
-          {% endif %}
-        <div class="">  
-          <label for="name" class="sr-only">Full name: </label>
-	  <div class="input-group mb-3">
-	    <div class="input-group-prepend">
-	      <span class="input-group-text" id="basic-addon1"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-person-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-		  <path fill-rule="evenodd" d="M14 1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-		  <path fill-rule="evenodd" d="M2 15v-1c0-1 1-4 6-4s6 3 6 4v1H2zm6-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-	      </svg></span>
-	    </div>
-	    <input type="text" id="name" placeholder="Full name..." name="fullname" required>
-	  </div>
-          <label for="name"  class="sr-only">Username: </label>
+	<br>
+	<br>
+	<div class="container pane-center">
+		<h1>Add/Edit User</h1>
+	
+		<form action="{% url 'adduser' %}" method="post">
+			{% csrf_token %}
+			{% if message %}
+				<div class="alert alert-danger">{{ message }}</div>
+			{% endif %}
+	
+			<div class="form-group">
+				<label for="name">Full Name:</label>
+				<input type="text" id="name" name="fullname" class="form-control" placeholder="Full Name..." required>
+			</div>
+	
+			<div class="form-group">
+				<label for="username">Username:</label>
+				<input type="text" id="username" name="username" class="form-control" placeholder="Username..." required>
+			</div>
+	
+			<div class="form-group">
+				<label for="password">Password:</label>
+				<input type="password" id="password" name="password" class="form-control" placeholder="Password..." required>
+			</div>
+	
+			<div class="form-group">
+				<label for="phoneNumber">Phone Number:</label>
+				<input type="text" id="phoneNumber" name="phone" class="form-control" placeholder="Phone Number..." required>
+			</div>
+	
+			<div class="form-group">
+				<label>Role:</label>
+				<div class="form-check">
+					<input type="radio" id="Admin" name="role" value="Admin" class="form-check-input" required>
+					<label for="Admin" class="form-check-label">Admin</label>
+				</div>
+				<div class="form-check">
+					<input type="radio" id="SalesAdmin" name="role" value="SalesAdmin" class="form-check-input" required>
+					<label for="SalesAdmin" class="form-check-label">SalesAdmin</label>
+				</div>
+				<div class="form-check">
+					<input type="radio" id="HR" name="role" value="HR" class="form-check-input">
+					<label for="HR" class="form-check-label">HR</label>
+				</div>
+				<div class="form-check">
+					<input type="radio" id="Operations" name="role" value="Operations" class="form-check-input">
+					<label for="Operations" class="form-check-label">Operations</label>
+				</div>
+			</div>
+	
+			<button type="submit" class="btn btn-success">Save</button>
+			<button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+		</form>
+	</div>
+	
+</body>
 
-	  <div class="input-group mb-3">
-	    <div class="input-group-prepend">
-	      <span class="input-group-text" id="basic-addon1"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-card-text" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-		  <path fill-rule="evenodd" d="M14.5 3h-13a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
-		  <path fill-rule="evenodd" d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
-	      </svg></span>
-	    </div>
-	    <input type="text" id="username" placeholder="Username..." name="username" required>
-	  </div>
-
-	  <label for="name"  class="sr-only">Password: </label>
-	  <div class="input-group mb-3">
-	    <div class="input-group-prepend">
-	      <span class="input-group-text" id="basic-addon1"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-key-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-		  <path fill-rule="evenodd" d="M3.5 11.5a3.5 3.5 0 1 1 3.163-5H14L15.5 8 14 9.5l-1-1-1 1-1-1-1 1-1-1-1 1H6.663a3.5 3.5 0 0 1-3.163 2zM2.5 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-	      </svg></span>
-	    </div>
-	    <input type="password" id="username" placeholder="Password..." name="password" required>
-	  </div>
-
-	  <label for="name"  class="sr-only">Phone Number: </label>
-	  <div class="input-group mb-3">
-	    <div class="input-group-prepend">
-	      <span class="input-group-text" id="basic-addon1"><svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.--><path d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"/></svg></span>
-	    </div>
-	    <input type="text" id="phoneNumber" placeholder="Phone Number..." name="phone" required>
-	  </div>
-	  
-	  <div class="form-check-inline">
-	    <div class="input-group mb-3">
-	      <div class="input-group-prepend">
-		<span class="input-group-text" id="basic-addon1">Role:</span>
-	      </div>
-	      <div class="radio-button-group">
-		
-			<input type="radio" id="Admin" name="role" value="Admin" class="form-check-input" required>
-			<label for="Admin" class="form-check-label">Admin</label>
-			
-			<input type="radio" id="SalesAdmin" name="role" value="SalesAdmin" class="form-check-input" required>
-			<label for="SalesAdmin" class="form-check-label">SalesAdmin</label>
-
-			<input type="radio" id="HR" name="role" value="HR" class="form-check-input">
-			<label for="HR" class="form-check-label">HR</label>
-
-			<input type="radio" id="Operations" name="role" value="Operations" class="form-check-input">
-			<label for="Operations" class="form-check-label">Operations</label>
-	      </div>
-	    </div>
-	  </div>
-        </div>
-        <button type="submit" class="btn btn-success">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
-      </form>
-    </body>
 </html>

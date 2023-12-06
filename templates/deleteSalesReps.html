@@ -20,14 +20,6 @@
                         <a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
                         {% elif role == "SalesAdmin" %}
                         <a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
-                        {% elif role == "Operations" %}
-                        <a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
-                        {% elif role == "SalesRep" %}
-                        <a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
-                        {% elif role == "HR" %}
-                        <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
-                        {% elif role == "cus" %}
-                        <a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
                         {% endif %}
                     </li>
                     <li class="nav-item">
@@ -36,23 +28,38 @@
                 </ul>
             </div>
     </div>
+    <br>
+    <br>
+    <br>
+    <br>
 
-
-    <form action="{% url 'deleteSalesRep' %}" method="post" class="pane-center">
-        <h1>Select User to delete</h1><br>
-        {% csrf_token %}<br>
-
-        <label for="UsersLabel">User :</label>
-        <select id="UsersLabel" name="User">
-            {% for i in salesreps %}
-            <option value="{{ i.id }}">{{ i.user_username }}</option>
-            {% endfor %}
-        </select><br>
-
-        <button type="submit" class="btn btn-danger">Delete Sales Representative</button>
-        <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
-
-    </form>
+    <div class="container pane-center">
+        <h1>Delete Sales Representative</h1>
+    
+        <form action="{% url 'deleteSalesRep' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="UsersLabel">User:</label>
+                <select id="UsersLabel" name="User" class="form-control">
+                    {% for i in salesreps %}
+                    <option value="{{ i.id }}">{{ i.user_username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-danger">Delete Sales Representative</button>
+            {% if role == "Admin" %}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+            {% elif role == "SalesAdmin" %}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/SalesAdmin';">Cancel</button>
+            {% endif %}
+            <br>
+            <br>
+            <p>Note: Deleting an User will also delete all their related Information</p>
+        </form>
+    </div>
+    
+   
 </body>
 
 </html>

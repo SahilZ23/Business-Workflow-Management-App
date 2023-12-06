@@ -15,19 +15,7 @@
                 <a class="navbar-brand" href="#">Delete Users</a>
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        {% if role == "Admin" %}
                         <a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
-                        {% elif role == "SalesAdmin" %}
-                        <a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
-                        {% elif role == "Operations" %}
-                        <a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
-                        {% elif role == "SalesRep" %}
-                        <a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
-                        {% elif role == "HR" %}
-                        <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
-                        {% elif role == "cus" %}
-                        <a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
-                        {% endif %}
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/">Logout</a>
@@ -36,21 +24,27 @@
             </div>
     </div>
 
-
-    <form action="{% url 'deleteUser' %}" method="post" class="pane-center">
-        <h1>Select User to delete</h1><br>
-        {% csrf_token %}<br>
-
-         <label for="UsersLabel">User :</label>
-                <select id="UsersLabel" name="User">
+    <div class="container pane-center">
+        <h1>Select User to Delete</h1>
+    
+        <form action="{% url 'deleteUser' %}" method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="UsersLabel">User:</label>
+                <select id="UsersLabel" name="User" class="form-control">
                     {% for i in users %}
-                        <option value = "{{ i.id }}">{{ i.user_username }}</option>
+                        <option value="{{ i.id }}">{{ i.user_username }}</option>
                     {% endfor %}
-                </select><br>
-
-         <button type="submit" class="btn btn-danger">Delete User</button>
-         <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
-
-     </form>
+                </select>
+            </div>
+    
+            <p>Note: Deleting a user will also delete all their related information.</p>
+            
+            <button type="submit" class="btn btn-danger">Delete User</button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+        </form>
+    </div>
+    
 </body>
 </html>

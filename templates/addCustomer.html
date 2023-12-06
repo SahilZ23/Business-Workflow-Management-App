@@ -7,11 +7,10 @@
     <link rel="stylesheet" href="static/css/bootstrap.css">
     <link href="static/style.css" rel="stylesheet" type="text/css" />
 </head>
-
-<body>
-    <div>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div class="collapse navbar-collapse" id="navbarNav">
+                <a class="navbar-brand" href="#">Add Customer</a>
                 <ul class="navbar-nav ml-auto">
                   <li class="nav-item">
                     {% if role == "Admin" %}
@@ -34,39 +33,63 @@
                 </ul>
               </div>
     </div>
-    <form action="/addCustomer" method="post" class="pane-center" id="addCustomerForm">
-        <h2 class="h4 mb-3 font-weight-normal">Add Customer</h2>
-        {% csrf_token %}<br>
-         {% if message %}
-            <div class="alert alert-danger">{{ message }}</div>
-        {% endif %}
-        <label for="cusName">Customer First Name:  </label>
-        <input type="text" name="cusFirstName" placeholder="Customer Name"><br>
-
-        <label for="cusName">Customer Last Name:  </label>
-        <input type="text" name="cusLastName" placeholder="Customer Name"><br>
-
-        <label for="cusAddress">Customer Address:  </label>
-        <input type="text" name="cusAddress" placeholder="Customer Address"><br>
-
-        <label for="cusAddress">City:  </label>
-        <input type="text" name="cusCity" placeholder="Customer City"><br>
-
-        <label for="cusAddress">State:  </label>
-        <input type="text" name="cusState" placeholder="Customer State"><br>
-
-        <label for="cusAddress">Zip:  </label>
-        <input type="text" name="cusZip" placeholder="Customer Zip Code"><br>
-
-        <label for="phoneNumber">Phone Number:  </label>
-        <input type="text" name="phoneNumber" placeholder="Phone Number"><br>
-
-        <label for="email">Email:  </label>
-        <input type="text" name="email" placeholder="Email"><br>
-
-        <button type="submit" class="btn btn-success">Save</button>
-        <!-- Replace the following with your desired cancellation URLs -->
-        <button type="button" class="btn btn-dark" onclick="window.location.href='/adminPage';">Cancel</button>
-    </form>
+<body>
+    
+    <br>
+    <br>
+    <div class="container pane-center" style="padding-top: 10%;">
+        <h1>Add Customer</h1>
+    
+        <form action="/addCustomer" method="post" id="addCustomerForm">
+            {% csrf_token %}
+            {% if message %}
+                <div class="alert alert-danger">{{ message }}</div>
+            {% endif %}
+    
+            <div class="form-group">
+                <label for="cusFirstName">Customer First Name:</label>
+                <input type="text" id="cusFirstName" name="cusFirstName" class="form-control" placeholder="First Name" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="cusLastName">Customer Last Name:</label>
+                <input type="text" id="cusLastName" name="cusLastName" class="form-control" placeholder="Last Name" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="cusAddress">Customer Address:</label>
+                <input type="text" id="cusAddress" name="cusAddress" class="form-control" placeholder="Address" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="cusCity">City:</label>
+                <input type="text" id="cusCity" name="cusCity" class="form-control" placeholder="City" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="cusState">State:</label>
+                <input type="text" id="cusState" name="cusState" class="form-control" placeholder="State" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="cusZip">Zip:</label>
+                <input type="text" id="cusZip" name="cusZip" class="form-control" placeholder="Zip Code" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" placeholder="Phone Number" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
+            </div>
+    
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-dark" onclick="window.location.href='/adminPage';">Cancel</button>
+        </form>
+    </div>
+    
 </body>
 </html>

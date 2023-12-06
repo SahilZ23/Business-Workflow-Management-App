@@ -10,21 +10,14 @@
 <body>
     <div>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">Add Item</a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                   <li class="nav-item">
                     {% if role == "Admin" %}
                     <a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
-                    {% elif role == "SalesAdmin" %}
-                        <a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
                     {% elif role == "Operations" %}
                         <a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
-                    {% elif role == "SalesRep" %}
-                        <a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
-                    {% elif role == "HR" %}
-                        <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
-                    {% elif role == "cus" %}
-                        <a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
                     {% endif %}
                   </li>
                   <li class="nav-item">
@@ -35,34 +28,39 @@
     </div>
 
     <div class="container pane-center">
-        <div class="row">
-            <div class="col-md-6 offset-md-3">
-                <h2 class="text-center">Add New Item</h2>
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-                <form action="{% url 'addItem' %}" method="post">
-                    {% csrf_token %}
-                    <div class="form-group mb-2">
-                        <label for="ItemName">Item Name:</label>
-                        <input type="text" class="form-control" id="ItemName" name="ItemName" required>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label for="ItemPrice">Item Price:</label>
-                        <input type="text" class="form-control" id="ItemPrice" name="ItemPrice" required>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label for="ItemNumber">Item Number:</label>
-                        <input type="number" class="form-control" id="ItemNumber" name="ItemNumber" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Item</button>
-                    
-                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancel</button>
-                </form>
+        <h1>Add New Item</h1>
+    
+        <form action="{% url 'addItem' %}" method="post">
+            {% csrf_token %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+    
+            <div class="form-group">
+                <label for="ItemName">Item Name:</label>
+                <input type="text" id="ItemName" name="ItemName" class="form-control" required>
             </div>
-        </div>
+    
+            <div class="form-group">
+                <label for="ItemPrice">Item Price:</label>
+                <input type="text" id="ItemPrice" name="ItemPrice" class="form-control" required>
+            </div>
+    
+            <div class="form-group">
+                <label for="ItemNumber">Item Number:</label>
+                <input type="number" id="ItemNumber" name="ItemNumber" class="form-control" required>
+            </div>
+    
+            <button type="submit" class="btn btn-success">Add Item</button>
+            {% if role == "Admin" %}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+            {% elif role == "Operations" %}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/Operations';">Cancel</button>
+            {% endif %}
+        </form>
     </div>
+    
 </body>
 </html>

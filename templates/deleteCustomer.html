@@ -36,20 +36,25 @@
 </div>
 
 <body>
-    <form action="{% url 'deleteCustomer' %}" method="post" class="pane-center">
-        <h1>Select Customer to delete</h1><br>
-        {% csrf_token %}<br>
-
-        <label for="CustomersLabel">Customer :</label>
-        <select id="CustomersLabel" name="Customer">
-            {% for customer in customers %}
-                <option value="{{ customer.id }}">{{ customer.cusFirstName }} {{ customer.CusLastName }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <br>
-        <button type="submit" class="btn btn-danger">Delete Customer</button>
-        <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
-    </form>
+    <div class="container pane-center">
+        <h1>Delete Customer</h1>
+    
+        <form action="{% url 'deleteCustomer' %}" method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="CustomersLabel">Select Customer:</label>
+                <select id="CustomersLabel" name="Customer" class="form-control">
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.cusFirstName }} {{ customer.CusLastName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+        </form>
+    </div>
+    
 </body>
 </html>

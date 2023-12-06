@@ -2,12 +2,15 @@
 <html>
 <head>
     <title>Generate Paycheck</title>
-    <link rel="stylesheet" href="static/css/bootstrap.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    <link href="{% static 'style.css' %}" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <div>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="collapse navbar-collapse" id="navbarNav">
+                <a class="navbar-brand" href="#">Generate Paychech</a>
                 <ul class="navbar-nav ml-auto">
                   <li class="nav-item">
                     <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
@@ -20,7 +23,7 @@
     </div>
     <br>
     <br>
-    <div class="container">
+    <div class="container pane-center">
         <h2>Generate Paycheck</h2>
         <form action="" method="post">
             {% csrf_token %}
@@ -40,8 +43,18 @@
                 <label for="hoursWorked">Hours Worked:</label>
                 <input type="number" class="form-control" id="hoursWorked" name="hours" required>
             </div>
-            <button type="submit" class="btn btn-primary">Generate Paycheck</button>
+            <div class="form-group">
+                <label for="payRate">Pay From:</label>
+                <input type="date" step="any" class="form-control" id="payRate" name="pay_from" required>
+            </div>
+            <div class="form-group">
+                <label for="payRate">Pay To:</label>
+                <input type="date" step="any" class="form-control" id="payRate" name="pay_to" required>
+            </div>
+            
         </form>
+        <button type="submit" class="btn btn-success">Generate Paycheck</button>
+        <button onclick="window.location.href='/HR';" class="btn btn-secondary">Back</button>
     </div>
 </body>
 </html>

@@ -248,7 +248,7 @@ class AddUser(View):
 
 class DeleteUsers(View):
     def get(self, request):
-        users = list(Users.objects.exclude(role="SalesRep"))
+        users = list(Users.objects.exclude(role__in=["SalesRep", "cus"]))
         return render(request, "deleteUsers.html", {"users": users})
 
     def post(self, request):
@@ -685,9 +685,17 @@ class ProcessOrder(View):
 class DeleteOrder(View):
     def get(self, request):
         # Fetch all orders
-        orders = Orders.objects.all()
         user = Users.objects.get(user_username=request.session.get("user_username"))
         role = user.role
+        if role == "SalesRep":
+            # Filter customers based on the user's region
+            customers = Customer.objects.filter(cusCity=user.region)
+            # Filter orders based on the filtered customers
+            orders = Orders.objects.filter(Customer__in=customers)
+        else:
+            # If the user is not a SalesRep, show all orders
+            orders = Orders.objects.all()
+        
 
         # Render the cancel order template
         return render(request, "cancelOrder.html", {"orders": orders, "role": role})
@@ -696,9 +704,7 @@ class DeleteOrder(View):
         user = Users.objects.get(user_username=request.session.get("user_username"))
         order_id = request.POST.get('Order')
         order = Orders.objects.get(id=order_id)
-        print(order)
         order_items = OrderItems.objects.filter(order=order)
-        print(order_items)
 
         # Send Text Message
         customer = order.Customer
@@ -897,6 +903,7 @@ class addSalesRep(View):
             username = request.POST['username']
             password = request.POST['password']
             region = request.POST['region']
+            phone = request.POST['phone']
             print(region)
             
             # validationx
@@ -920,9 +927,10 @@ class addSalesRep(View):
 
                 # store personal information
                 if user_e.info is None:
-                    user_e.info = PersonalInfo.objects.create(myName=fullname)
+                    user_e.info = PersonalInfo.objects.create(myName=fullname, phoneNumber=phone)
                 else:
                     user_e.info.myName = fullname
+                    user_e.info.phoneNumber=phone
                     user_e.info.save()
 
                 user_e.save()
@@ -957,8 +965,11 @@ class deleteSalesReps(View):
         user = Users.objects.get(user_username=request.session.get("user_username"))
 
         try:
-            Users.objects.get(id=request.POST['User']).delete()
-        
+            user = Users.objects.get(id=request.POST['User'])
+            if hasattr(user, 'info'):  
+                user.info.delete()     
+            user.delete()
+
             if user.role == "Admin":
                     return redirect('/adminPage')
             elif user.role == "SalesAdmin":
