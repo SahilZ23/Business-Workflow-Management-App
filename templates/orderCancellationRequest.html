@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Order Cancellation Request</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: auto; padding: 20px; background-color: #fff; }
+        h1 { color: #333; }
+        p { color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Order Cancellation Request</h1>
+        <p>Dear {{ customer_name }},</p>
+        <p>We have received your request to cancel the following order:</p>
+        <p>Order Number: {{ order_id }}</p>
+        <p>We will process your request and inform you of the next steps shortly.</p>
+        <p>Thank you,</p>
+        <p>Customer Service Team</p>
+    </div>
+</body>
+</html>

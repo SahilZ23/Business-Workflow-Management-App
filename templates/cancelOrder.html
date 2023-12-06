@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
@@ -7,35 +8,63 @@
     <link rel="stylesheet" href="static/css/bootstrap.css">
     <link href="static/style.css" rel="stylesheet" type="text/css" />
 </head>
+
 <body>
 
-<div id="header" class="text-center mb-4">
-    <h1>Delete Order</h1>
-</div>
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <a class="navbar-brand" href="#">Delete Order</a>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        {% if role == "Admin" %}
+                        <a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
+                        {% elif role == "SalesAdmin" %}
+                        <a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
+                        {% elif role == "Operations" %}
+                        <a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
+                        {% elif role == "SalesRep" %}
+                        <a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
+                        {% elif role == "HR" %}
+                        <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
+                        {% elif role == "cus" %}
+                        <a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Logout</a>
+                    </li>
+                </ul>
+            </div>
+    </div>
 
-<div class="container"> 
-    <form action="{% url 'deleteOrder' %}" method="post" class="pane-center">
-        <div class="mb-3"> 
-            <h2>Select Order to Delete</h2>
-        </div>
+    <div class="container">
+        <form action="{% url 'deleteOrder' %}" method="post" class="pane-center">
+            <div class="mb-3">
+                <h2>Select Order to Delete</h2>
+            </div>
 
-        {% csrf_token %}
+            {% csrf_token %}
 
-        <div class="form-group mb-3"> <!-- mb-3 adds margin-bottom -->
-            <label for="OrdersLabel" class="form-label">Order ID:</label>
-            <select id="OrdersLabel" name="Order" class="form-select">
-                {% for order in orders %}
+            <div class="form-group mb-3"> <!-- mb-3 adds margin-bottom -->
+                <label for="OrdersLabel" class="form-label">Order ID:</label>
+                <select id="OrdersLabel" name="Order" class="form-select">
+                    {% for order in orders %}
                     <option value="{{ order.id }}">{{ order.orderNum }}</option>
-                {% endfor %}
-            </select>
-        </div>
+                    {% endfor %}
+                </select>
+            </div>
 
-        
-        <button type="submit" class="btn btn-danger me-5">Delete Order</button> 
-        <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
-        
-    </form>
-</div>
+
+            <button type="submit" class="btn btn-danger me-5">Delete Order</button>
+            {% if role == "Admin" %}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+            {% elif role == "Operations"%}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/Operations';">Cancel</button>
+            {% endif %}
+        </form>
+    </div>
 
 </body>
+
 </html>

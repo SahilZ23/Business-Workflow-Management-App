@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Paycheck</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+</head>
+<body>
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                  <li class="nav-item">
+                    <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/">Logout</a>
+                  </li>
+                </ul>
+              </div>
+    </div>
+    <br>
+    <br>
+    <div class="container">
+        <h2>Generate Paycheck</h2>
+        <form action="" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="userSelect">Select User:</label>
+                <select id="userSelect" name="user_id" class="form-control">
+                    {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.info.myName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="payRate">Pay Rate:</label>
+                <input type="number" step="any" class="form-control" id="payRate" name="pay_rate" required>
+            </div>
+            <div class="form-group">
+                <label for="hoursWorked">Hours Worked:</label>
+                <input type="number" class="form-control" id="hoursWorked" name="hours" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Paycheck</button>
+        </form>
+    </div>
+</body>
+</html>

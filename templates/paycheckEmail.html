@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Paycheck Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Paycheck Information</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ employee_name }},</p>
+            <p>We are sending you the details of your latest paycheck:</p>
+            <p><b>Pay Period:</b> {{ pay_period }}</p>
+            <p><b>Hours Worked:</b> {{ hours }}</p>
+            <p><b>Hourly Rate:</b> ${{ pay_rate }}</p>
+            <p><b>Total Pay:</b> ${{ total_pay }}</p>
+            <p>Please review your paycheck details and let us know if there are any discrepancies.</p>
+            <p>Thank you for your hard work!</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message, please do not reply directly to this email.</p>
+            <p>Human Resources Department</p>
+        </div>
+    </div>
+</body>
+</html>

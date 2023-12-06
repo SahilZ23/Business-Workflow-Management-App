@@ -17,7 +17,6 @@ from sinch import Client
 
 validate = Validations()
 
-
 # Create your views here.
 
 # LOGIN AND VERIFICATION
@@ -339,7 +338,7 @@ class AddCustomer(View):
         cusZip = request.POST.get('cusZip')
         phoneNumber = request.POST.get('phoneNumber')
         email = request.POST.get('email')
-        
+        fullname = cusFirstName + " " + cusLastName
         
         
         # Perform validation using your validation module (if needed)
@@ -361,7 +360,8 @@ class AddCustomer(View):
                 cus_user = Users.objects.create(
                     user_username=username,
                     user_password=password,
-                    role=user_role
+                    role=user_role,
+                    info = PersonalInfo.objects.create(myName=fullname, phoneNumber=phoneNumber)
                 )
 
                 # Create a new Customer instance and save it to the database
@@ -413,9 +413,25 @@ class DeleteCustomer(View):
 
     def post(self, request):
         customer_id = request.POST.get('Customer')
-        Customer.objects.get(id=customer_id).delete()
-        return redirect('/adminPage')
-
+        
+        username = customer_id.cusFirstName[0].lower() + customer_id.CusLastName.lower()
+        try:
+            cus = Customer.objects.get(id=customer_id)
+            cus.delete()
+            user = Users.objects.get(user_username=username)
+            user.info.delete()
+            user.delete()
+            if user.role == "Admin":
+                return redirect('/adminPage')
+            if user.role == "SalesAdmin":
+                return redirect('/SalesAdminView')
+            elif user.role == "SalesRep":
+                return redirect("salesRep")
+        except Exception as ex:
+            print(ex)
+        
+        return render(request, "deleteCustomer.html", {"message": 'Something went wrong, check your information.'})
+        
 # ORDER ADD/EDIT + DELETE + VIEW + PROCESS
 
 class AddOrder(View):
@@ -428,14 +444,15 @@ class AddOrder(View):
             customers = Customer.objects.all()
             OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=3)
             formset = OrderItemFormset(queryset=OrderItems.objects.none())
-
+            role = user.role
         except Exception as ex:
             return redirect("login")
         
-        return render(request, "addOrder.html", {"user": user, "customers": customers, "formset": formset})
+        return render(request, "addOrder.html", {"user": user, "customers": customers, "formset": formset, "role":role})
 
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
         OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=3)
         formset = OrderItemFormset(request.POST)
         order_amount = 0
@@ -549,6 +566,7 @@ class ViewOrders(View):
         
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
         if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep"]:
             return redirect("login")
 
@@ -565,12 +583,12 @@ class ViewOrders(View):
             orders = Orders.objects.all()
 
         # Render the view orders template
-        return render(request, "viewOrders.html", {"orders": orders, "user": user})
+        return render(request, "viewOrders.html", {"orders": orders, "user": user, "role": role})
     
     def view_specific_order(self, request, order_id):
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep"]:
+        if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep", "cus"]:
             return redirect("login")
 
         # Get specific order or return 404 if not found
@@ -605,9 +623,11 @@ class ProcessOrder(View):
     def get(self, request):
         # Fetch all orders
         orders = Orders.objects.filter(status="Placed")
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
 
         # Render the cancel order template
-        return render(request, "processOrder.html", {"orders": orders})
+        return render(request, "processOrder.html", {"orders": orders, "role": role})
      
     def post(self, request):
         order_id = request.POST.get('Order')
@@ -666,9 +686,11 @@ class DeleteOrder(View):
     def get(self, request):
         # Fetch all orders
         orders = Orders.objects.all()
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
 
         # Render the cancel order template
-        return render(request, "cancelOrder.html", {"orders": orders})
+        return render(request, "cancelOrder.html", {"orders": orders, "role": role})
     
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
@@ -739,6 +761,43 @@ class DeleteOrder(View):
         elif user.role == "SalesRep":
             return redirect("/SalesAdmin")
 
+class RequestOrderCancellation(View):
+    def get(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
+        customer = Customer.objects.get(user=user)
+        orders = list(Orders.objects.filter(Customer=customer))
+        return render(request, "requestCancellation.html", {"orders": orders, "role": role})
+
+    def post(self, request):
+        order_id = request.POST.get('Order')
+        order = Orders.objects.get(id=order_id)
+        order.status = "Cancellation Requested"
+        order.save()
+
+        # Prepare email content
+        try:
+            subject = "Order Cancellation Request"
+            name = order.Customer.cusFirstName + " " + order.Customer.CusLastName
+            context = {
+                'customer_name': name,
+                'order_id': order.orderNum,
+            }
+            html_content = render_to_string('orderCancellationRequest.html', context)
+            text_content = strip_tags(html_content)
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.EMAIL_HOST_USER,
+                to=[str(order.Customer.email)]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+        except Exception as ex:
+            print("Error sending email", ex)
+
+        return redirect('/customer')
 # ITEM ADD/DELTE
 
 class AddItemView(View):
@@ -750,7 +809,7 @@ class AddItemView(View):
         except Exception as ex:
             return redirect("login")
         
-        return render(request, "addItem.html", {"user": user})
+        return render(request, "addItem.html", {"user": user, "role": role})
 
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
@@ -787,7 +846,7 @@ class DeleteItem(View):
             return redirect("login")
 
         items = Items.objects.all()
-        return render(request, 'deleteItem.html', {'items': items, "user": user})
+        return render(request, 'deleteItem.html', {'items': items, "user": user, "role": user.role})
 
     def post(self, request):
 
@@ -824,7 +883,7 @@ class addSalesRep(View):
         if not Validations.checkLogin(self, request):
             return redirect("login")
 
-        return render(request, "addSalesRep.html", {"user": user})
+        return render(request, "addSalesRep.html", {"user": user, "role":user.role})
 
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
@@ -892,7 +951,7 @@ class deleteSalesReps(View):
             return redirect("login")
         salesreps = list(Users.objects.filter(role="SalesRep"))
 
-        return render(request, "deleteSalesReps.html", {"user": user, "salesreps": salesreps})
+        return render(request, "deleteSalesReps.html", {"user": user, "salesreps": salesreps, "role": user.role})
 
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
@@ -915,7 +974,8 @@ class Admin(View):
     def get(self, request):
         if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Admin"):
             return redirect("login")
-
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        name = user.info.myName
         courses = list(Courses.objects.all())
         sections = list(Section.objects.all())
         users = list(Users.objects.exclude(role__in=["SalesRep", "cus"]))
@@ -926,12 +986,10 @@ class Admin(View):
         for o in order:
             sales += (o.orderAmount)
 
-       
-        
         items = list(Items.objects.all())
         salesreps = list(Users.objects.filter(role="SalesRep"))
 
-        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps})
+        return render(request, "admin.html", {"courses": courses, "sections": sections, "users": users, "customers": customers, "orders": order, "sales": sales, "items": items, "salesreps": salesreps, "Name": name})
 
     def post(self, request):
         pass
@@ -943,13 +1001,15 @@ class SalesAdmin(View):
         if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "SalesAdmin"):
             return redirect("login")
         
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
         orders = list(Orders.objects.all())
         # Get a list of salesreps
         salesreps = list(Users.objects.filter(role="SalesRep"))
         print(salesreps)
         sales = sum(o.orderAmount for o in orders)
 
-        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales})
+        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales, "role": role})
 
     def post(self, request):
         pass
@@ -972,7 +1032,7 @@ class salesRep(View):
                 orders.append(i)
 
 
-        return render(request, "salesRep.html", {"customers": customers, "orders": orders})
+        return render(request, "salesRep.html", {"customers": customers, "orders": orders, "role":user.role})
     def post(self, request):
         pass
 
@@ -993,7 +1053,8 @@ class Navigate(View):
             'customer_lat': customer_location['lat'],
             'customer_lng': customer_location['lng'], 
             'cusAdd': customer_address, 
-            'customer': customer
+            'customer': customer,
+            'role': user.role
         }
 
         return render(request, "navigate.html", context)
@@ -1017,12 +1078,14 @@ class Operations(View):
         if not Validations.checkLogin(self, request) or not Validations.checkRole(self, request, "Operations"):
             return redirect("login")
         try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
             items = list(Items.objects.all())
             orders = list(Orders.objects.all())
 
 
             # Call render with the request object as the first parameter
-            return render(request, "operations.html", {"items": items, "orders": orders})
+            return render(request, "operations.html", {"items": items, "orders": orders, "role":role})
         except Exception as ex:
             print("Exception:", ex)
             return redirect("login")
@@ -1037,25 +1100,20 @@ class HR(View):
             return redirect("login")
 
         try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
             # Fetch all employees excluding Admin users
-            employees = Users.objects.exclude(role="Admin")
+            employees = Users.objects.exclude(role__in=["Admin", "cus"])
         except Exception as ex:
             print("Exception:", ex)
             return redirect('login')
         
-        return render(request, "hr.html", {"employees": employees})
+        return render(request, "hr.html", {"employees": employees, "role":role})
     
     def post(self, request):
         pass
 
 class ViewEmployeeInfo(View):
-    def get(self, request):
-        pass
-    def post(self, request):
-        pass
-
-# Generate Pay checks
-class GeneratePayCheck(View):
     def get(self, request):
         pass
     def post(self, request):
@@ -1068,12 +1126,62 @@ class CustomerView(View):
         user = Users.objects.get(user_username=request.session.get("user_username"))
         customer = Customer.objects.get(user=user)
         orders = list(Orders.objects.filter(Customer=customer))
+        salesReps = Users.objects.filter(region = customer.cusCity)
         orderItemsDict = {}
         for order in orders:
             orderItems = OrderItems.objects.filter(order=order)
             orderItemsDict[order] = orderItems
 
 
-        return render(request, "customer.html", {"customer": customer, "orders":orders, "orderItems":orderItemsDict})
+        return render(request, "customer.html", {"customer": customer, "orders":orders, "orderItems":orderItemsDict, "salesreps": salesReps})
     def post(self, request):
         pass
+
+# Generate Pay checks
+class GeneratePayCheck(View):
+    def get(self, request):
+        users = Users.objects.exclude(role='cus')
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
+        return render(request, "generatePayCheck.html", {"users": users, "role":role})
+    
+    def post(self, request):
+        user_id = request.POST.get('user_id')
+        pay_rate = request.POST.get('pay_rate')
+        hours = request.POST.get('hours')
+        info = PersonalInfo.objects.get(id=user_id)
+        user = Users.objects.get(info=info)
+        total_pay = float(pay_rate) * int(hours)
+
+        user.pay_rate = pay_rate
+        user.hours = hours
+
+        # Prepare email content
+        try:
+            subject = "Your Paycheck Details"
+            name = user.info.myName
+            context = {
+                'employee_name': name,
+                'employee_id': user.emp_id,
+                'pay_rate': user.pay_rate,
+                'hours': user.hours,
+                'total_pay': total_pay,
+            }
+
+            html_content = render_to_string('paycheckEmail.html', context)
+            text_content = strip_tags(html_content)
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.EMAIL_HOST_USER,
+                to=[user.info.email] 
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+        except Exception as ex:
+            print("Error sending email", ex)
+
+        # Additional logic as needed
+
+        return redirect('/HR')

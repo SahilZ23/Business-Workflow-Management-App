@@ -1,31 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
-		<title>Delete Sales Representative</title>
-		<link rel="stylesheet" href="static/css/bootstrap.css">
-		<link href="static/style.css" rel="stylesheet" type="text/css" />
-	</head>
 
-	<div id="header" class="text-center">
-	<h1 style="visibility: hidden;">Delete Users</h1>
-	</div>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Delete Sales Representative</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link href="static/style.css" rel="stylesheet" type="text/css" />
+</head>
+
 <body>
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <a class="navbar-brand" href="#">Delete Sales Representative</a>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        {% if role == "Admin" %}
+                        <a class="nav-item nav-link" href="{% url 'adminPage' %}">Home</a>
+                        {% elif role == "SalesAdmin" %}
+                        <a class="nav-item nav-link" href="{% url 'SalesAdmin' %}">Home</a>
+                        {% elif role == "Operations" %}
+                        <a class="nav-item nav-link" href="{% url 'Operations' %}">Home</a>
+                        {% elif role == "SalesRep" %}
+                        <a class="nav-item nav-link" href="{% url 'salesRep' %}">Home</a>
+                        {% elif role == "HR" %}
+                        <a class="nav-item nav-link" href="{% url 'HR' %}">Home</a>
+                        {% elif role == "cus" %}
+                        <a class="nav-item nav-link" href="{% url 'customer' %}">Home</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Logout</a>
+                    </li>
+                </ul>
+            </div>
+    </div>
+
+
     <form action="{% url 'deleteSalesRep' %}" method="post" class="pane-center">
         <h1>Select User to delete</h1><br>
         {% csrf_token %}<br>
 
-         <label for="UsersLabel">User :</label>
-                <select id="UsersLabel" name="User">
-                    {% for i in salesreps %}
-                        <option value = "{{ i.id }}">{{ i.user_username }}</option>
-                    {% endfor %}
-                </select><br>
+        <label for="UsersLabel">User :</label>
+        <select id="UsersLabel" name="User">
+            {% for i in salesreps %}
+            <option value="{{ i.id }}">{{ i.user_username }}</option>
+            {% endfor %}
+        </select><br>
 
-         <button type="submit" class="btn btn-danger">Delete Sales Representative</button>
-         <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete Sales Representative</button>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
 
-     </form>
+    </form>
 </body>
+
 </html>
