@@ -37,6 +37,7 @@
         <h1>Delete Sales Representative</h1>
     
         <form action="{% url 'deleteSalesRep' %}" method="post">
+
             {% csrf_token %}
             <div class="form-group">
                 <label for="UsersLabel">User:</label>

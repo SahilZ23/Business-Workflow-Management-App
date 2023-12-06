@@ -957,6 +957,8 @@ class deleteSalesReps(View):
         
         if not Validations.checkLogin(self, request):
             return redirect("login")
+
+        # Filter sales reps based on their role
         salesreps = list(Users.objects.filter(role="SalesRep"))
 
         return render(request, "deleteSalesReps.html", {"user": user, "salesreps": salesreps, "role": user.role})
@@ -965,20 +967,21 @@ class deleteSalesReps(View):
         user = Users.objects.get(user_username=request.session.get("user_username"))
 
         try:
-            user = Users.objects.get(id=request.POST['User'])
-            if hasattr(user, 'info'):  
-                user.info.delete()     
-            user.delete()
+            user_to_delete = Users.objects.get(id=request.POST['User'])
+            if hasattr(user_to_delete, 'info'):  
+                user_to_delete.info.delete()     
+            user_to_delete.delete()
 
             if user.role == "Admin":
-                    return redirect('/adminPage')
+                return redirect('/adminPage')
             elif user.role == "SalesAdmin":
-                    return redirect('/SalesAdmin')
+                return redirect('/SalesAdmin')
         except Exception as ex:
             print("Exception:", ex)
 
-        return render(request, "deleteSalesReps.html", {"user": user})
-    
+        # Redirect the user to the same page after successful deletion
+        return redirect('deleteSalesRep')
+
 # ADMIN FUNCTIONALITY
 
 class Admin(View):
