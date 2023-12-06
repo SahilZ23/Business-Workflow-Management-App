@@ -44,7 +44,8 @@ class Login(View):
 
                     # The number that will receive the SMS. Test accounts are limited to verified numbers.
                     # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
-                    toNumber = '+14148823039'
+                    phone = "+1" + u.info.phoneNumber
+                    toNumber = phone
 
                     sinchVerificationUrl = "https://verification.api.sinch.com/verification/v1/verifications"
 
@@ -105,7 +106,9 @@ class verify(View):
 
         # The number to which the code was sent. Test accounts are limited to verified numbers.
         # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
-        toNumber = '+14148823039'
+        # toNumber = '+14148823039'
+        phone = "+1" + u.info.phoneNumber
+        toNumber = phone
 
         sinchVerificationUrl = "https://verification.api.sinch.com/verification/v1/verifications/number/" + toNumber
 
@@ -140,6 +143,44 @@ class verify(View):
             error_message = data.get('message', 'Verification Failed. Please try again.')
             return render(request, "verify.html", {"message": error_message, "user": u})
 
+# PASSWORD RESET
+
+class PasswordReset(View):
+    def get(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        role = user.role
+        return render(request, "passwordReset.html", {"role": role})
+
+    def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if new_password != confirm_password:
+            return render(request, "passwordReset.html", {"message": "Passwords do not match"})
+
+        try:
+            user.user_password = new_password
+            user.save()
+            messages.success(request, "Password successfully updated.")
+        except Users.DoesNotExist:
+            messages.error(request, "User not found.")
+
+        # Redirect based on user role
+
+        if user.role == "Admin":
+            return redirect("adminPage")
+        if user.role == "SalesAdmin":
+            return redirect("SalesAdmin")            
+        if user.role == "Operations":
+            return redirect("Operations")
+        if user.role == "SalesRep":
+            return redirect("salesRep")
+        if user.role == "HR":
+            return redirect("HR")
+        if user.role == "cus":
+            return redirect("customer")
+
 # USER ADD/DELETE
 
 class AddUser(View):
@@ -167,6 +208,7 @@ class AddUser(View):
             username = request.POST['username']
             password = request.POST['password']
             role = request.POST['role']
+            phone = request.POST['phone']
 
             # validation
             errors = validate.checkAddUserPost(fullname, username, password, role, region)
@@ -186,17 +228,19 @@ class AddUser(View):
             user.user_password = password
             user.role = role
             user.region = region
+            
 
             # store personal information
             if user.info is None:
-                user.info = PersonalInfo.objects.create(myName=fullname)
+                user.info = PersonalInfo.objects.create(myName=fullname, phoneNumber=phone)
             else:
                 user.info.myName = fullname
+                user.info.phoneNumber = phone
                 user.info.save()
 
             user.save()
         else:
-            new_personal_info = PersonalInfo.objects.create(myName=fullname)
+            new_personal_info = PersonalInfo.objects.create(myName=fullname, phoneNumber=phone)
             newUser = Users.objects.create(user_username=username, user_password=password, role=role,
                                            info=new_personal_info, region=region)
             newUser.save()
@@ -209,7 +253,10 @@ class DeleteUsers(View):
         return render(request, "deleteUsers.html", {"users": users})
 
     def post(self, request):
-        Users.objects.get(id=request.POST['User']).delete()
+        user = Users.objects.get(id=request.POST['User'])
+        if hasattr(user, 'info'):  
+            user.info.delete()     
+        user.delete()    
         return redirect('/adminPage')
 
 # PERSONAL INFO
@@ -244,7 +291,7 @@ class AddPersonalInfo(View):
             email = request.POST.get('email')
 
             # validation
-            # errors = validate.checkPersonalInfoPost(name=name, address=address, phoneNumber=p_num, email=email)
+            # errors = validate.checkPersonalInfoPost(name=name, phoneNumber=p_num, email=email)
             # if len(errors) > 0:
             #     error_msg = 'Please correct the following: '
             #     for error in errors:
@@ -263,7 +310,6 @@ class AddPersonalInfo(View):
             PersonalInfo.objects.filter(id=pi.id).update(myName=name, address=add, city=city, state=state, zip=zip, phoneNumber=p_num, email=email)
 
         return redirect('/HR')
-
 
 #CUSTOMER ADD/EDIT + DELETE
 
@@ -872,7 +918,7 @@ class Admin(View):
 
         courses = list(Courses.objects.all())
         sections = list(Section.objects.all())
-        users = list(Users.objects.exclude(role="SalesRep"))
+        users = list(Users.objects.exclude(role__in=["SalesRep", "cus"]))
 
         customers = list(Customer.objects.all())
         order = list(Orders.objects.all())
@@ -1012,5 +1058,22 @@ class ViewEmployeeInfo(View):
 class GeneratePayCheck(View):
     def get(self, request):
         pass
+    def post(self, request):
+        pass
+
+class CustomerView(View):
+    def get(self, request):
+        if not Validations.checkLogin(self, request):
+            return redirect("login")
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        customer = Customer.objects.get(user=user)
+        orders = list(Orders.objects.filter(Customer=customer))
+        orderItemsDict = {}
+        for order in orders:
+            orderItems = OrderItems.objects.filter(order=order)
+            orderItemsDict[order] = orderItems
+
+
+        return render(request, "customer.html", {"customer": customer, "orders":orders, "orderItems":orderItemsDict})
     def post(self, request):
         pass

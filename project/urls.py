@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin,  AddUser, DeleteUsers,  AddCustomer, SalesAdmin, DeleteCustomer, \
      AddOrder, DeleteOrder, ViewOrders, AddItemView, DeleteItem, addSalesRep, deleteSalesReps, Operations,salesRep, HR, \
-     ViewEmployeeInfo, AddPersonalInfo, Navigate,ProcessOrder, verify
+     ViewEmployeeInfo, AddPersonalInfo, Navigate,ProcessOrder, verify, CustomerView, PasswordReset
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,10 +40,11 @@ urlpatterns = [
     path('Operations', Operations.as_view(), name="Operations"),
     path('salesRep', salesRep.as_view(), name="salesRep"),
     path('HR', HR.as_view(), name="HR"),
-    # path('customer', Customer.as_view(), name="customer"),
+    path('customer', CustomerView.as_view(), name="customer"),
     path('viewEmployee', ViewEmployeeInfo.as_view(), name="viewEmployee"),
     path('AddPersonalInfo/<uuid:user_id>/', AddPersonalInfo.as_view(), name='AddPersonalInfo'),
     path('AddPersonalInfo', AddPersonalInfo.as_view(), name="AddPersonalInfo"),
     path('Navigate/<int:customer_id>/', Navigate.as_view(), name="Navigate"),
     path('ProcessOrder/', ProcessOrder.as_view(), name="ProcessOrder"),
+    path('PasswordReset', PasswordReset.as_view(), name="PasswordReset"),
    ]

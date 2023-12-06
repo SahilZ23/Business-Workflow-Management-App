@@ -35,58 +35,39 @@ body {
 
 /* code used from example https://getbootstrap.com/docs/4.5/examples/sign-in */
 .form-signin {
-    width: 100%;
-    max-width: 330px;
-    padding: 15px;
-    margin: auto;
+    background-color: #ffffff; /* Light background for the form */
+    padding: 2em; /* Adjusted padding */
+    border-radius: 10px; /* Rounded corners */
+    border: 1px solid #ced4da; /* Subtle border */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow for depth */
+
+    width: auto; /* Adjust width as per content */
+    max-width: 400px; /* Maximum width */
+    margin: 2em auto; /* Center the form with margin */
+    position: relative; /* Use relative for positioning */
+    top: initial; /* Reset top */
+    left: initial; /* Reset left */
+    transform: none; /* Remove transform */
 }
-.form-signin .checkbox {
-    font-weight: 400;
+
+.form-signin h1 {
+    color: #007bff; /* Use a primary color for the header */
+    font-size: 1.75em; /* Increase font size */
+    text-align: center; /* Center align the text */
+    margin-bottom: 1.5em; /* Space below the header */
 }
-.form-signin .form-control {
-    position: relative;
-    box-sizing: border-box;
-    height: auto;
-    padding: 10px;
-    font-size: 16px;
-}
-.form-signin .form-control:focus {
-    z-index: 2;
-}
-.form-signin input[type="text"] {
-    margin-bottom: -25px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-}
+
 .form-signin input[type="password"] {
-    margin-bottom: 25px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-}
-/* end code used from exampple */
-
-.form-signin {
-    background-color: #f6f6f6;	
-    padding: 5em 1em;
-    border-radius:  5px;
-    border: 1px solid gray;
-    box-shadow: -5px 0px 0px skyblue,  5px 0px 0px skyblue;
-
-    position: absolute;
-    top: 50%;
-    left: 50%;
-
-    transform: translate(-50%, -50%);
+    margin-bottom: 1em; /* Space between input fields */
 }
 
 .form-signin button {
-    position: relative;
-    top: 3em;
+    margin-top: 1em; /* Space above the button */
+    width: 100%; /* Full-width button */
+    padding: 0.75em; /* Padding for the button */
+    font-size: 1em; /* Adjust font size */
 }
 
-.form-signin .bi-person-square {
-    margin: 0 0 1em 0px;
-}
 
 button svg {
     margin-left: 3px;
