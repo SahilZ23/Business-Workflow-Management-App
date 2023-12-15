@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items, OrderItems, Employee
+from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, Customer, Orders, Items, OrderItems, Employee, Task
 from Syllabus_Project.Validations import Validations
 from django.shortcuts import render, redirect, get_object_or_404
 from django.forms import modelformset_factory
@@ -411,27 +411,53 @@ class DeleteCustomer(View):
         customers = list(Customer.objects.all())
         return render(request, "deleteCustomer.html", {"customers": customers})
 
+    # def post(self, request):
+    #     customer_id = request.POST.get('Customer')
+        
+    #     username = customer_id.cusFirstName[0].lower() + customer_id.CusLastName.lower()
+    #     try:
+    #         cus = Customer.objects.get(id=customer_id)
+    #         cus.delete()
+    #         user = Users.objects.get(user_username=username)
+    #         user.info.delete()
+    #         user.delete()
+    #         if user.role == "Admin":
+    #             return redirect('/adminPage')
+    #         if user.role == "SalesAdmin":
+    #             return redirect('/SalesAdminView')
+    #         elif user.role == "SalesRep":
+    #             return redirect("salesRep")
+    #     except Exception as ex:
+    #         print(ex)
+        
+    #     return render(request, "deleteCustomer.html", {"message": 'Something went wrong, check your information.'})
     def post(self, request):
         customer_id = request.POST.get('Customer')
-        
-        username = customer_id.cusFirstName[0].lower() + customer_id.CusLastName.lower()
+
         try:
             cus = Customer.objects.get(id=customer_id)
-            cus.delete()
+            username = cus.cusFirstName[0].lower() + cus.CusLastName.lower()
             user = Users.objects.get(user_username=username)
+
+            cus.delete()
             user.info.delete()
             user.delete()
+
             if user.role == "Admin":
                 return redirect('/adminPage')
-            if user.role == "SalesAdmin":
+            elif user.role == "SalesAdmin":
                 return redirect('/SalesAdminView')
             elif user.role == "SalesRep":
                 return redirect("salesRep")
+            # Add other roles if necessary
         except Exception as ex:
             print(ex)
-        
-        return render(request, "deleteCustomer.html", {"message": 'Something went wrong, check your information.'})
-        
+            # Return an error message if something goes wrong
+            return render(request, "deleteCustomer.html", {"message": 'Something went wrong, check your information.'})
+
+        # Fallback return statement
+        return redirect('/adminPage')
+    
 # ORDER ADD/EDIT + DELETE + VIEW + PROCESS
 
 class AddOrder(View):
@@ -442,7 +468,9 @@ class AddOrder(View):
         try:
             user = Users.objects.get(user_username=request.session.get("user_username"))
             customers = Customer.objects.all()
-            OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=3)
+            items = list(Items.objects.all())
+            num = len(items)
+            OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=num)
             formset = OrderItemFormset(queryset=OrderItems.objects.none())
             role = user.role
         except Exception as ex:
@@ -453,7 +481,10 @@ class AddOrder(View):
     def post(self, request):
         user = Users.objects.get(user_username=request.session.get("user_username"))
         role = user.role
-        OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=3)
+        items = list(Items.objects.all())
+        num = len(items)
+
+        OrderItemFormset = modelformset_factory(OrderItems, form=OrderItemsForm, extra=num)
         formset = OrderItemFormset(request.POST)
         order_amount = 0
         
@@ -643,7 +674,7 @@ class ProcessOrder(View):
 
         phone = "1"+ str(customer.phoneNumber)
         sinch_client.sms.batches.send(
-        body="Hello from Sahil Inc.! Your Order has been processed. The Total ammount is " + str(order.orderAmount) + "." 
+        body="Hello from BWMSoln! Your Order has been processed. The Total ammount is " + str(order.orderAmount) + "." 
             "Thank you for shopping with us!",
         to=[phone],
         from_="12085810216",
@@ -716,7 +747,7 @@ class DeleteOrder(View):
 
         phone = "1"+ str(customer.phoneNumber)
         sinch_client.sms.batches.send(
-        body="Hello from Sahil Inc.! We would like to inform you that your order has been canceled." + 
+        body="Hello from BWMSoln! We would like to inform you that your order has been canceled." + 
             "While we regret doing business with you, we hope you will choose us again in the future.",
         to=[phone],
         from_="12085810216",
@@ -1020,10 +1051,11 @@ class SalesAdmin(View):
         orders = list(Orders.objects.all())
         # Get a list of salesreps
         salesreps = list(Users.objects.filter(role="SalesRep"))
-        print(salesreps)
         sales = sum(o.orderAmount for o in orders)
+        tasks = Task.objects.filter(status="Assigned")
+        completed_tasks = Task.objects.filter(status="Completed")
 
-        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales, "role": role})
+        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales, "role": role, "tasks": tasks, "completed_tasks": completed_tasks})
 
     def post(self, request):
         pass
@@ -1045,8 +1077,9 @@ class salesRep(View):
             if i.Customer in customers:
                 orders.append(i)
 
+        tasks = Task.objects.filter(rep=user, status="Assigned")
 
-        return render(request, "salesRep.html", {"customers": customers, "orders": orders, "role":user.role})
+        return render(request, "salesRep.html", {"customers": customers, "orders": orders, "role":user.role, "tasks": tasks})
     def post(self, request):
         pass
 
@@ -1163,13 +1196,16 @@ class GeneratePayCheck(View):
         user_id = request.POST.get('user_id')
         pay_rate = request.POST.get('pay_rate')
         hours = request.POST.get('hours')
+        period1 = request.POST.get('pay1')
+        period2 = request.POST.get('pay2')
         info = PersonalInfo.objects.get(id=user_id)
         user = Users.objects.get(info=info)
         total_pay = float(pay_rate) * int(hours)
 
         user.pay_rate = pay_rate
         user.hours = hours
-
+        period = str(period1) + " to " + str(period2)
+        
         # Prepare email content
         try:
             subject = "Your Paycheck Details"
@@ -1180,6 +1216,7 @@ class GeneratePayCheck(View):
                 'pay_rate': user.pay_rate,
                 'hours': user.hours,
                 'total_pay': total_pay,
+                'Pay_period': period,
             }
 
             html_content = render_to_string('paycheckEmail.html', context)
@@ -1199,3 +1236,101 @@ class GeneratePayCheck(View):
         # Additional logic as needed
 
         return redirect('/HR')
+
+class AddTaskView(View):
+    template_name = 'AddTask.html'
+
+    def get(self, request):
+        # Add authentication and permissions checks here if necessary
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            role = user.role
+            salesreps = Users.objects.filter(role="SalesRep")
+        except Exception as ex:
+            return redirect("login")
+        
+        return render(request, self.template_name, {"user": user, "role": role, "salesreps": salesreps})
+
+    def post(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
+        rep_id = request.POST.get('rep')
+        due_date = request.POST.get('due_date')
+        description = request.POST.get('description')
+
+        try:
+            rep = Users.objects.get(id=rep_id)
+            # Create and save the new task
+            new_task = Task(rep=rep, due_date=due_date, status="Assigned", description=description)
+            new_task.save()
+            messages.success(request, 'Task added successfully.')
+
+            # Send email to the assigned sales rep
+            subject = "New Task Assignment"
+            context = {
+                'sales_rep_name': rep.info.myName,
+                'description': description,
+                'due_date': due_date,
+            }
+
+            html_content = render_to_string('taskAssignmentEmail.html', context)
+            text_content = strip_tags(html_content)
+
+            send_mail(
+                subject,
+                text_content,
+                settings.EMAIL_HOST_USER,
+                [rep.info.email],  
+                html_message=html_content,
+            )
+
+            # Redirect to the Sales Admin page
+            return redirect('/SalesAdmin')
+
+        except Exception as e:
+            print(f'Error adding task: {e}')  # Add this line for debugging
+            messages.error(request, f'Error adding task: {e}')
+            return render(request, self.template_name, {"user": user})
+
+class CompleteTaskView(View):
+    template_name = 'completeTask.html'  # Update with the correct template name
+
+    def get(self, request):
+        try:
+            user = Users.objects.get(user_username=request.session.get("user_username"))
+            print(user)
+            role = user.role
+
+            tasks = Task.objects.filter(rep=user, status="Assigned")
+            print(tasks)
+
+            # Render the completion form
+            return render(request, self.template_name, {'tasks': tasks, "role": role})
+        except Task.DoesNotExist:
+            # Handle the case where the task with the given ID doesn't exist
+            # You may want to show an error message or redirect to an error page
+            return redirect('/SalesRep')  # Update with your actual URL for the sales rep page
+
+    def post(self, request):
+        try:
+            task_id = request.POST.get('task_id')
+            # Find the task by its ID
+            task = Task.objects.get(description=task_id)
+
+            # Update task status to "Completed"
+            task.status = "Completed"
+
+            # Get completion notes from the form
+            completion_notes = request.POST.get('completion_notes')
+
+            # Set completion notes for the task
+            task.completion_notes = completion_notes
+
+            # Save the changes
+            task.save()
+
+            # Redirect to the Sales Rep page or update the task list
+            return redirect('/salesRep')  # Update with your actual URL for the sales rep page
+        except Task.DoesNotExist:
+            # Handle the case where the task with the given ID doesn't exist
+            # You may want to show an error message or redirect to an error page
+            return redirect('/salesRep')  # Update with your actual URL for the sales rep page

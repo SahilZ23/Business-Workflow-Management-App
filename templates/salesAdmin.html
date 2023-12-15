@@ -13,7 +13,7 @@
   <div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="collapse navbar-collapse" id="navbarNav">
-        <a class="navbar-brand" href="#">Add Customer</a>
+        <a class="navbar-brand" href="#">Sales Admin Panel</a>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
             <a class="nav-link" href="/PasswordReset">Change Password</a>
@@ -76,6 +76,111 @@
     </button>
 
   </div>
+<!--Display all the Tasks assigned to sales reps-->
+  <div class="container pane" id="sales-reps-pane">
+    <center>
+      <h2>Sales Representatives Tasks - Assigned</h2>
+    </center>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Sales Rep</th>
+          <th>Status</th>
+          <th>Description</th>
+          <th>Due Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr>
+          <td>{{ task.rep.info.myName }}</td>
+          <td>{{ task.status }}</td>
+          <td>{{ task.description }}</td>
+          <td>{{ task.due_date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button class="btn btn-success" onclick="window.location.href='/addtask';">Add Task
+      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-file-plus-fill" fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd"
+          d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM8.5 6a.5.5 0 0 0-1 0v1.5H6a.5.5 0 0 0 0 1h1.5V10a.5.5 0 0 0 1 0V8.5H10a.5.5 0 0 0 0-1H8.5V6z" />
+      </svg>
+    </button>
+
+  </div>
+
+  <div class="container pane" id="sales-reps-pane">
+    <center>
+      <h2>Sales Representatives Tasks - Completed</h2>
+    </center>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Sales Rep</th>
+          <th>Status</th>
+          <th>Description</th>
+          <th>Completion Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in completed_tasks %}
+        <tr>
+          <td>{{ task.rep.info.myName }}</td>
+          <td>{{ task.status }}</td>
+          <td>{{ task.description }}</td>
+          <td>{{ task.complete_notes }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+
+<!--Diplay the Customers Table-->
+  <div class="container pane" id="customers-pane">
+    <center>
+      <h2>Customers</h2>
+    </center>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Customer Name</th>
+          <th>Customer Address</th>
+          <th>Email</th>
+          <th>Phone Number</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr>
+          <td>{{ customer.cusFirstName }} {{ customer.CusLastName }}</td>
+          <td>{{ customer.cusAddress }}</td>
+          <td>{{ customer.email }}</td>
+          <td>{{ customer.phoneNumber }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <br>
+    <button class="btn btn-success" onclick="window.location.href='/addCustomer';">Add/Edit Customer
+      <svg xmlns="http://www.w3.org/2000/svg" height="16" width="14"
+        viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+        <path fill="#ffffff"
+          d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z" />
+      </svg>
+    </button>
+    <button class="btn btn-dark" onclick="window.location.href='/deleteCustomer';">Delete Customer
+      <svg xmlns="http://www.w3.org/2000/svg" height="16" width="14"
+        viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+        <path fill="#ffffff"
+          d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z" />
+      </svg>
+    </button>
+  </div>
+
 
   <!--Display the Orders Currently placed-->
   <div class="container pane" id="orders-pane">
@@ -95,9 +200,9 @@
         {% for order in orders %}
         <tr>
           <td>{{ order.orderNum }}</td>
-          <td>{{ order.Customer.cusName }}</td>
+          <td>{{ order.Customer.cusFirstName }} {{ order.Customer.CusLastName  }}</td>
           <td>{{ order.orderDate }}</td>
-          <td>{{ order.orderAmount }}</td>
+          <td>$ {{ order.orderAmount }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -145,7 +250,7 @@
       </thead>
       <tbody>
         <tr>
-          <td>{{ sales }}</td>
+          <td>$ {{ sales }}</td>
         </tr>
       </tbody>
     </table>

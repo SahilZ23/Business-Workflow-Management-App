@@ -13,7 +13,7 @@
   <div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="collapse navbar-collapse" id="navbarNav">
-        <a class="navbar-brand" href="#">Add Customer</a>
+        <a class="navbar-brand" href="#">Sales Rep Panel</a>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
             <a class="nav-link" href="/PasswordReset">Change Password</a>
@@ -119,6 +119,41 @@
       </svg>
     </button>
   </div>
+
+<!--Display all the Tasks assigned to sales reps-->
+  <div class="container pane" id="sales-reps-pane">
+    <center>
+      <h2>My Tasks</h2>
+    </center>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Description</th>
+          <th>Due Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr>
+          <td>{{ task.status }}</td>
+          <td>{{ task.description }}</td>
+          <td>{{ task.due_date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button class="btn btn-dark" onclick="window.location.href='/complete-task';">Complete Task
+      <svg xmlns="http://www.w3.org/2000/svg" height="16" width="14"
+        viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+        <path fill="#ffffff"
+          d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" />
+      </svg>
+    </button>
+
+  </div>
+
   <br>
   <script src="static/js/jquery-3.5.1.slim.min.js" type="text/javascript"></script>
   <script src="static/js/bootstrap.bundle.min.js" type="text/javascript"></script>

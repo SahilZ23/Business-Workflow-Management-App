@@ -19,11 +19,11 @@ body {
     font-weight: 900;
 }
 
-#header h1{
+#header h1 {
     display: inline-block;
 }
 
-#header #back{
+#header #back {
     float: left;
     margin: .3em;
 }
@@ -35,37 +35,58 @@ body {
 
 /* code used from example https://getbootstrap.com/docs/4.5/examples/sign-in */
 .form-signin {
-    background-color: #ffffff; /* Light background for the form */
-    padding: 2em; /* Adjusted padding */
-    border-radius: 10px; /* Rounded corners */
-    border: 1px solid #ced4da; /* Subtle border */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow for depth */
+    background-color: #ffffff;
+    /* Light background for the form */
+    padding: 2em;
+    /* Adjusted padding */
+    border-radius: 10px;
+    /* Rounded corners */
+    border: 1px solid #ced4da;
+    /* Subtle border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Soft shadow for depth */
 
-    width: auto; /* Adjust width as per content */
-    max-width: 400px; /* Maximum width */
-    margin: 2em auto; /* Center the form with margin */
-    position: relative; /* Use relative for positioning */
-    top: initial; /* Reset top */
-    left: initial; /* Reset left */
-    transform: none; /* Remove transform */
+    width: auto;
+    /* Adjust width as per content */
+    max-width: 400px;
+    /* Maximum width */
+    margin: 2em auto;
+    /* Center the form with margin */
+    position: relative;
+    /* Use relative for positioning */
+    top: initial;
+    /* Reset top */
+    left: initial;
+    /* Reset left */
+    transform: none;
+    /* Remove transform */
 }
 
 .form-signin h1 {
-    color: #007bff; /* Use a primary color for the header */
-    font-size: 1.75em; /* Increase font size */
-    text-align: center; /* Center align the text */
-    margin-bottom: 1.5em; /* Space below the header */
+    color: #007bff;
+    /* Use a primary color for the header */
+    font-size: 1.75em;
+    /* Increase font size */
+    text-align: center;
+    /* Center align the text */
+    margin-bottom: 1.5em;
+    /* Space below the header */
 }
 
 .form-signin input[type="password"] {
-    margin-bottom: 1em; /* Space between input fields */
+    margin-bottom: 1em;
+    /* Space between input fields */
 }
 
 .form-signin button {
-    margin-top: 1em; /* Space above the button */
-    width: 100%; /* Full-width button */
-    padding: 0.75em; /* Padding for the button */
-    font-size: 1em; /* Adjust font size */
+    margin-top: 1em;
+    /* Space above the button */
+    width: 100%;
+    /* Full-width button */
+    padding: 0.75em;
+    /* Padding for the button */
+    font-size: 1em;
+    /* Adjust font size */
 }
 
 
@@ -122,7 +143,7 @@ button svg {
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%, -50%);
 
     box-shadow: 0px -2px 0px gray, 0px 2px 0px gray;
 }
@@ -136,21 +157,23 @@ button svg {
     border-radius: 0px 3px 3px 0px;
 }
 
-.radio-button-group label{
+.radio-button-group label {
     margin-right: .7em;
 }
 
 .syllabusViewHeader h1 {
     font-weight: 900;
-    transform: scale(1.4,1.4);
+    transform: scale(1.4, 1.4);
 }
+
 .syllabusViewHeader h2 {
     font-weight: 900;
-    transform: scale(1.4,1.4);
+    transform: scale(1.4, 1.4);
 }
+
 .syllabusViewHeader h3 {
     font-weight: 900;
-    transform: scale(1.4,1.4);
+    transform: scale(1.4, 1.4);
 }
 
 #syllabusView {
@@ -160,4 +183,53 @@ button svg {
 .courseInfos {
     font-size: large;
     font-weight: bold;
+}
+
+.sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+}
+
+.sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+}
+
+.sidenav a:hover {
+    color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+}
+
+#main {
+    transition: margin-left .5s;
+    padding: 16px;
+}
+
+@media screen and (max-height: 450px) {
+    .sidenav {
+        padding-top: 15px;
+    }
+
+    .sidenav a {
+        font-size: 18px;
+    }
 }

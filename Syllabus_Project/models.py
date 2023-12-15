@@ -15,6 +15,7 @@ class PersonalInfo(models.Model):
         return f"{self.myName}"
 
 
+
 ROLES = (
     # The main roles for this project are Admin, SalesAdmin, SalesRep, HR and Operations
     ("Admin", "Admin"),
@@ -107,6 +108,16 @@ class Employee(models.Model):
     def __str__(self):
         return f"{self.employee.user_username} - {self.employee_id}"
 
+class Task(models.Model):
+    rep = models.ForeignKey(Users, on_delete=models.DO_NOTHING, null=True, blank=True)
+    due_date = models.DateField()
+    status = models.CharField(max_length=50)
+    description = models.TextField()
+    complete_notes = models.TextField(default="", null=True, blank=True)
+
+    def __str__(self):
+        return self.description
+    
 class Courses(models.Model):
     courseName = models.CharField(max_length=100)
     courseNumber = models.IntegerField()  # courseNumber should be unique and no course will have the same courseNumber

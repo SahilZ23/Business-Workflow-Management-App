@@ -84,6 +84,9 @@
             {% if user.role == "SalesAdmin" %}
             <button type="button" class="btn btn-secondary" onclick="window.location.href='/SalesAdmin';">Cancel</button>
             {% endif %}
+            {% if user.role == "cus" %}
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/customer';">Cancel</button>
+            {% endif %}
         </form>
         </form>
     </div>

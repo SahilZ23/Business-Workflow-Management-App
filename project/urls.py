@@ -18,7 +18,7 @@ from django.urls import path, re_path
 from Syllabus_Project.views import Login, Admin,  AddUser, DeleteUsers,  AddCustomer, SalesAdmin, DeleteCustomer, \
      AddOrder, DeleteOrder, ViewOrders, AddItemView, DeleteItem, addSalesRep, deleteSalesReps, Operations,salesRep, HR, \
      ViewEmployeeInfo, AddPersonalInfo, Navigate,ProcessOrder, verify, CustomerView, PasswordReset, GeneratePayCheck, \
-     RequestOrderCancellation
+     RequestOrderCancellation, AddTaskView, CompleteTaskView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -50,4 +50,6 @@ urlpatterns = [
     path('PasswordReset', PasswordReset.as_view(), name="PasswordReset"),
     path('GeneratePay', GeneratePayCheck.as_view(), name="GeneratePay"),
     path('requestCancellation', RequestOrderCancellation.as_view(), name="requestCancellation"),
+    path('addtask/', AddTaskView.as_view(), name='add_task'),
+    path('complete-task/', CompleteTaskView.as_view(), name='complete-task'),
    ]

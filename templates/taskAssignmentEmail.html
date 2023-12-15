@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Task Assignment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Task Assignment</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ sales_rep_name }},</p>
+            <p>You have been assigned a new task. Here are the details:</p>
+            <p><b>Task Description:</b> {{ description }}</p>
+            <p><b>Due Date:</b> {{ due_date }}</p>
+            <p>Please review the task details and make sure to complete it before the due date.</p>
+            <p>Thank you for your dedication and hard work!</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message, please do not reply directly to this email.</p>
+            <p>Task Management System</p>
+        </div>
+    </div>
+</body>
+
+</html>
