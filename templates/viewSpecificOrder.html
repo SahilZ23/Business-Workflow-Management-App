@@ -42,7 +42,7 @@
     <div class="container mt-4">
         <h1>Order Details</h1>
         <p><strong>Order Number:</strong> {{ order.orderNum }}</p>
-        <p><strong>Customer:</strong> {{ order.Customer.cusName }}</p> <!-- Assuming Customer model has 'name' field -->
+        <p><strong>Customer:</strong> {{ order.Customer.cusFirstName }} {{ order.Customer.CusLastName }}</p> <!-- Assuming Customer model has 'name' field -->
         <p><strong>Order Date:</strong> {{ order.orderDate }}</p>
 
         <h2>Items in Order</h2>

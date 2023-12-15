@@ -61,8 +61,10 @@ class Login(View):
                     response = requests.post(sinchVerificationUrl, json=payload, headers=headers, auth=(applicationKey, applicationSecret))
 
                     data = response.json()
+                    print(data)
                 except Exception as ex:
                     print("Exception occurred:", ex, data['status'])
+                
                 if u.role == "Admin":
                     request.session["user_username"] = username
                     return redirect("/Verify")
@@ -398,7 +400,7 @@ class AddCustomer(View):
             if user.role == "Admin":
                 return redirect('/adminPage')
             if user.role == "SalesAdmin":
-                return redirect('/SalesAdminView')
+                return redirect('/SalesAdmin')
             elif user.role == "SalesRep":
                 return redirect("salesRep")
             
@@ -408,32 +410,12 @@ class AddCustomer(View):
         
 class DeleteCustomer(View):
     def get(self, request):
+        user = Users.objects.get(user_username=request.session.get("user_username"))
         customers = list(Customer.objects.all())
-        return render(request, "deleteCustomer.html", {"customers": customers})
+        return render(request, "deleteCustomer.html", {"customers": customers, "role":user.role})
 
-    # def post(self, request):
-    #     customer_id = request.POST.get('Customer')
-        
-    #     username = customer_id.cusFirstName[0].lower() + customer_id.CusLastName.lower()
-    #     try:
-    #         cus = Customer.objects.get(id=customer_id)
-    #         cus.delete()
-    #         user = Users.objects.get(user_username=username)
-    #         user.info.delete()
-    #         user.delete()
-    #         if user.role == "Admin":
-    #             return redirect('/adminPage')
-    #         if user.role == "SalesAdmin":
-    #             return redirect('/SalesAdminView')
-    #         elif user.role == "SalesRep":
-    #             return redirect("salesRep")
-    #     except Exception as ex:
-    #         print(ex)
-        
-    #     return render(request, "deleteCustomer.html", {"message": 'Something went wrong, check your information.'})
     def post(self, request):
         customer_id = request.POST.get('Customer')
-
         try:
             cus = Customer.objects.get(id=customer_id)
             username = cus.cusFirstName[0].lower() + cus.CusLastName.lower()
@@ -446,17 +428,16 @@ class DeleteCustomer(View):
             if user.role == "Admin":
                 return redirect('/adminPage')
             elif user.role == "SalesAdmin":
-                return redirect('/SalesAdminView')
+                return redirect('/SalesAdmin')
             elif user.role == "SalesRep":
                 return redirect("salesRep")
             # Add other roles if necessary
+
         except Exception as ex:
             print(ex)
             # Return an error message if something goes wrong
             return render(request, "deleteCustomer.html", {"message": 'Something went wrong, check your information.'})
 
-        # Fallback return statement
-        return redirect('/adminPage')
     
 # ORDER ADD/EDIT + DELETE + VIEW + PROCESS
 
@@ -570,14 +551,7 @@ class AddOrder(View):
 
                     except Exception as ex:
                         print("Email sending failed: ", ex)
-
-                    if user.role == "Admin":
-                        return redirect('/adminPage')
-                    elif user.role == "Operations":
-                        return redirect('/Operations')
-                    elif user.role == "SalesRep":
-                        return redirect("/salesRep")
-
+                    
                 except Exception as ex:
                     print("Exception:", ex)
                     return render(request, "addOrder.html")
@@ -588,6 +562,15 @@ class AddOrder(View):
                 "customers": Customer.objects.all(),
                 "formset": formset
             })
+        
+        if user.role == "Admin":
+            return redirect('/adminPage')
+        elif user.role == "Operations":
+            return redirect('/Operations')
+        elif user.role == "SalesAdmin":
+            return redirect("/SalesAdmin")
+        elif user.role == "SalesRep":
+            return redirect("/salesRep")
         
 class ViewOrders(View):
     def get(self, request, order_id=None):
@@ -619,8 +602,8 @@ class ViewOrders(View):
     def view_specific_order(self, request, order_id):
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep", "cus"]:
-            return redirect("login")
+        # if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep", "cus"]:
+        #     return redirect("login")
 
         # Get specific order or return 404 if not found
         order = get_object_or_404(Orders, orderNum=order_id)
@@ -795,8 +778,10 @@ class DeleteOrder(View):
             return redirect('/adminPage')
         elif user.role == "Operations":
             return redirect('/Operations')
-        elif user.role == "SalesRep":
+        elif user.role == "SalesAdmin":
             return redirect("/SalesAdmin")
+        elif user.role == "SalesRep":
+            return redirect("/salesRep")
 
 class RequestOrderCancellation(View):
     def get(self, request):
@@ -869,7 +854,7 @@ class AddItemView(View):
             if user.role == "Admin":
                 return redirect('/adminPage')
             elif user.role == "Operations":
-                return redirect('/Opeartions')
+                return redirect('/Operations')
 
         except Exception as e:
             messages.error(request, f'Error adding item: {e}')
@@ -905,8 +890,8 @@ class DeleteItem(View):
        # Redirect to the previous page
         if user.role == "Admin":
             return redirect('/adminPage')
-            # elif user.role == "Operations":
-            #     return redirect('/OpeartionsView')
+        elif user.role == "Operations":
+            return redirect('/Operations')
 
 # ADD SALESREP USER
 
@@ -1054,8 +1039,9 @@ class SalesAdmin(View):
         sales = sum(o.orderAmount for o in orders)
         tasks = Task.objects.filter(status="Assigned")
         completed_tasks = Task.objects.filter(status="Completed")
+        customers = Customer.objects.all()
 
-        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales, "role": role, "tasks": tasks, "completed_tasks": completed_tasks})
+        return render(request, "salesAdmin.html", {"orders": orders, "salesreps": salesreps, "sales": sales, "role": role, "tasks": tasks, "completed_tasks": completed_tasks, "customers": customers})
 
     def post(self, request):
         pass
@@ -1314,7 +1300,8 @@ class CompleteTaskView(View):
         try:
             task_id = request.POST.get('task_id')
             # Find the task by its ID
-            task = Task.objects.get(description=task_id)
+            task_id = request.POST.get('task_id')
+            task = Task.objects.get(id=task_id)
 
             # Update task status to "Completed"
             task.status = "Completed"

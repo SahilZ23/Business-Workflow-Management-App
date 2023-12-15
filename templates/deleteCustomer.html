@@ -52,7 +52,16 @@
             </div>
             
             <button type="submit" class="btn btn-danger">Delete</button>
-            <button type="button" class="btn btn-secondary" onclick="window.location.href='/adminPage';">Cancel</button>
+            
+            {% if role == "Admin"%}
+            <button type="button" class="btn btn-dark" onclick="window.location.href='/adminPage';">Cancel</button>
+            {% endif %}
+            {% if role == "SalesAdmin"%}
+            <button type="button" class="btn btn-dark" onclick="window.location.href='/SalesAdmin';">Cancel</button>
+            {% endif %}
+            {% if role == "SalesRep"%}
+            <button type="button" class="btn btn-dark" onclick="window.location.href='/salesRep';">Cancel</button>
+            {% endif %}
         </form>
     </div>
     
