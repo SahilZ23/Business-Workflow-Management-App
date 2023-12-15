@@ -1219,8 +1219,6 @@ class GeneratePayCheck(View):
         except Exception as ex:
             print("Error sending email", ex)
 
-        # Additional logic as needed
-
         return redirect('/HR')
 
 class AddTaskView(View):
