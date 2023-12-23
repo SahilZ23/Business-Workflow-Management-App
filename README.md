@@ -1,4 +1,3 @@
-# CS361_Project
+# CS 995 Project  
 
-The repository for our CompSci 361 group project.
-Made by Sahil, Karl, Madhuri, William 
+The repository for my CS 995 Capstone Project
