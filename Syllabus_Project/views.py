@@ -107,7 +107,6 @@ class verify(View):
 
         # The number to which the code was sent. Test accounts are limited to verified numbers.
         # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
-        # toNumber = '+14148823039'
         phone = "+1" + u.info.phoneNumber
         toNumber = phone
 
@@ -292,12 +291,12 @@ class AddPersonalInfo(View):
             email = request.POST.get('email')
 
             # validation
-            # errors = validate.checkPersonalInfoPost(name=name, phoneNumber=p_num, email=email)
-            # if len(errors) > 0:
-            #     error_msg = 'Please correct the following: '
-            #     for error in errors:
-            #         error_msg += error + '. '
-            #     return render(request, "personalInfo.html", {"message": error_msg})
+            errors = validate.checkPersonalInfoPost(name=name, phoneNumber=p_num, email=email)
+            if len(errors) > 0:
+                error_msg = 'Please correct the following: '
+                for error in errors:
+                    error_msg += error + '. '
+                return render(request, "personalInfo.html", {"message": error_msg})
 
         except Exception as ex:
             return render(request, "personalInfo.html", {"message": 'Something went wrong, check your information.'})
@@ -344,13 +343,13 @@ class AddCustomer(View):
         
         
         # Perform validation using your validation module (if needed)
-        # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
+        errors = validate.checkCustomerInfoPost(cusFirstName, cusAddress, phoneNumber, email)
         # Check for validation errors
-        # Example: if len(errors) > 0:
-        #     error_msg = 'Please correct the following: '
-        #     for error in errors:
-        #         error_msg += error + '. '
-        #     return render(request, "customer_form.html", {"message": error_msg})
+        if len(errors) > 0:
+            error_msg = 'Please correct the following: '
+            for error in errors:
+                error_msg += error + '. '
+            return render(request, "customer_form.html", {"message": error_msg})
 
         try:
             # Generate username and password
@@ -443,8 +442,8 @@ class DeleteCustomer(View):
 
 class AddOrder(View):
     def get(self, request):
-        # if not Validations.checkLogin(request) or Validations.checkRole(request, ["Admin", "SalesRep", "SalesAdmin", "Operations"]):
-        #     return redirect("login")
+        if not Validations.checkLogin(request) or Validations.checkRole(request, ["Admin", "SalesRep", "SalesAdmin", "Operations"]):
+            return redirect("login")
         
         try:
             user = Users.objects.get(user_username=request.session.get("user_username"))
@@ -602,8 +601,8 @@ class ViewOrders(View):
     def view_specific_order(self, request, order_id):
         # Authentication and role checks
         user = Users.objects.get(user_username=request.session.get("user_username"))
-        # if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep", "cus"]:
-        #     return redirect("login")
+        if user.role not in ["Admin", "Operations", "SalesAdmin", "SalesRep", "cus"]:
+            return redirect("login")
 
         # Get specific order or return 404 if not found
         order = get_object_or_404(Orders, orderNum=order_id)
@@ -762,7 +761,7 @@ class DeleteOrder(View):
                 subject=subject,
                 body=text_content,
                 from_email=settings.EMAIL_HOST_USER,
-                to=[str(order.Customer.email)]  # Assuming the Customer model has an 'email' field
+                to=[str(order.Customer.email)] 
             )
             email.attach_alternative(html_content, "text/html")
             email.send()
@@ -1225,7 +1224,6 @@ class AddTaskView(View):
     template_name = 'AddTask.html'
 
     def get(self, request):
-        # Add authentication and permissions checks here if necessary
         try:
             user = Users.objects.get(user_username=request.session.get("user_username"))
             role = user.role
@@ -1271,12 +1269,12 @@ class AddTaskView(View):
             return redirect('/SalesAdmin')
 
         except Exception as e:
-            print(f'Error adding task: {e}')  # Add this line for debugging
+            print(f'Error adding task: {e}') 
             messages.error(request, f'Error adding task: {e}')
             return render(request, self.template_name, {"user": user})
 
 class CompleteTaskView(View):
-    template_name = 'completeTask.html'  # Update with the correct template name
+    template_name = 'completeTask.html' 
 
     def get(self, request):
         try:
@@ -1290,9 +1288,8 @@ class CompleteTaskView(View):
             # Render the completion form
             return render(request, self.template_name, {'tasks': tasks, "role": role})
         except Task.DoesNotExist:
-            # Handle the case where the task with the given ID doesn't exist
-            # You may want to show an error message or redirect to an error page
-            return redirect('/SalesRep')  # Update with your actual URL for the sales rep page
+
+            return redirect('/SalesRep')  
 
     def post(self, request):
         try:
@@ -1314,8 +1311,6 @@ class CompleteTaskView(View):
             task.save()
 
             # Redirect to the Sales Rep page or update the task list
-            return redirect('/salesRep')  # Update with your actual URL for the sales rep page
+            return redirect('/salesRep')  
         except Task.DoesNotExist:
-            # Handle the case where the task with the given ID doesn't exist
-            # You may want to show an error message or redirect to an error page
-            return redirect('/salesRep')  # Update with your actual URL for the sales rep page
+            return redirect('/salesRep')  

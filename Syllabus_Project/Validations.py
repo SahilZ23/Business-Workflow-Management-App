@@ -1,49 +1,12 @@
-from Syllabus_Project.models import Users, Courses, PersonalInfo, Section, Policies, ROLES, Orders
+from Syllabus_Project.models import Users,PersonalInfo, Customer, ROLES, Orders, Items, Orders, OrderItems
+from django.forms.models import modelformset_factory
 import re
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.contrib import messages
 
 class Validations():
-    def checkDuplicateCourse(self, courseName, courseNum, courseYear, courseSem):
-        courses = Courses.objects.filter(courseName=courseName, courseNumber=courseNum, year=courseYear, semester=courseSem)
-        return len(courses) != 0
-
-    def checkCoursePost(self, courseName, courseNum, courseYear, courseSem):
-        #global course_name, course_sem, course_num, course_year
-        has_alpha_regex = re.compile('[A-Za-z\s]+[\d]*')
-        is_numeric_regex = re.compile('^[\d]+$')
-        errors = []
-        parse_will_fail = False
-
-        if not has_alpha_regex.match(courseName):
-            errors.append("Course name should start as alphabetic")
-
-        if not has_alpha_regex.match(courseSem):
-            errors.append("Course semester should start as alphabetic")
-
-        if not is_numeric_regex.match(courseNum):
-            errors.append("Course number must be a positive integer")
-            parse_will_fail = True
-
-        if not is_numeric_regex.match(courseYear):
-            errors.append("Course year must be a positive integer")
-            parse_will_fail = True
-
-        if not parse_will_fail:
-            try:
-                course_num = int(courseNum)
-                course_year = int(courseYear)
-
-                if course_num <= 0:
-                    errors.append("Course number must be a positive integer")
-
-                if course_year <= 0:
-                    errors.append("Course year must be a positive integer")
-
-            except(ValueError, TypeError):
-                errors.append("Could not parse numeric input")
-
-        return errors
-        #self.checkDuplicateCourse(courseName, courseNum, courseYear, courseSem)
-
     def checkLogin(self, request):
         if not request.session.get("user_username"):
             return False
@@ -123,32 +86,198 @@ class Validations():
 
         return errors
 
-    # return whether a user is permitted to update the policy for a course
-    def userCanAddPolicy(self, user, course):
-        if user.role != "Instructor":
-            return False
-
-        if len(Section.objects.filter(courses=course, users=user)) > 0:
-            return True
-        else:
-            return False
-
-    def checkSectionPost(self, course, user):
-        if user.role == "Instructor" and Section.objects.filter(courses__id=course.id, users__role="Instructor").exists():
-            return "Professor already assigned to this course"
-        return ""
-
-
-        # Example: errors = validate.checkCustomerInfoPost(cusName, cusAddress, phoneNumber, email)
-        # Check for validation errors
-        # Example: if len(errors) > 0:
-        #     error_msg = 'Please correct the following: '
-        #     for error in errors:
-        #         error_msg += error + '. '
-        #     return render(request, "customer_form.html", {"message": error_msg})
-
     def check_order_num_unique(self, order_num):
             errors = []
             if Orders.objects.filter(orderNum=order_num).exists():
                 errors.append("Order number must be unique.")
             return errors
+    
+
+class PasswordResetViewTest(TestCase):
+    def setUp(self):
+        # Create a test user
+        self.user = Users.objects.create(user_username='testuser', user_password='old_password', role='Admin')
+        self.client = Client()
+        self.client.force_login(self.user)  # Log in the user for testing
+
+    def test_password_reset_get(self):
+        response = self.client.get(reverse('password_reset'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'passwordReset.html')
+
+    def test_password_reset_post_success(self):
+        data = {
+            'new_password': 'new_password',
+            'confirm_password': 'new_password'
+        }
+        response = self.client.post(reverse('password_reset'), data)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.user_password, 'new_password')
+        self.assertRedirects(response, reverse('adminPage'))  # Replace 'adminPage' with the correct URL name
+
+    def test_password_reset_post_non_matching_passwords(self):
+        data = {
+            'new_password': 'new_password',
+            'confirm_password': 'different_password'
+        }
+        response = self.client.post(reverse('password_reset'), data)
+        self.assertIn('Passwords do not match', response.context['message'])
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'passwordReset.html')
+
+class AddUserViewTest(TestCase):
+
+    def setUp(self):
+        self.admin_user = Users.objects.create(user_username='admin', user_password='adminpass', role='Admin')
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+
+    def test_add_user_get_as_admin(self):
+        response = self.client.get(reverse('add_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'adduser.html')
+
+    def test_add_user_post_success(self):
+        data = {
+            'fullname': 'Test User',
+            'username': 'testuser',
+            'password': 'password',
+            'role': 'SalesRep',
+            'phone': '1234567890'
+        }
+        response = self.client.post(reverse('add_user'), data)
+        self.assertEqual(Users.objects.count(), 2)
+        self.assertTrue(Users.objects.filter(user_username='testuser').exists())
+        self.assertRedirects(response, reverse('admin_page'))  # Replace 'admin_page' with the correct URL name
+
+    def test_add_user_post_invalid_data(self):
+        data = {
+            'fullname': '',
+            'username': '',
+            'password': '',
+            'role': '',
+            'phone': ''
+        }
+        response = self.client.post(reverse('add_user'), data)
+        self.assertIn('message', response.context)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'adduser.html')
+
+class DeleteUsersViewTest(TestCase):
+
+    def setUp(self):
+        self.admin_user = Users.objects.create(user_username='admin', user_password='adminpass', role='Admin')
+        self.user_to_delete = Users.objects.create(user_username='testuser', user_password='testpass', role='HR')
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+
+    def test_delete_users_get(self):
+        response = self.client.get(reverse('delete_users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'deleteUsers.html')
+        self.assertIn(self.user_to_delete, response.context['users'])
+
+    def test_delete_users_post(self):
+        response = self.client.post(reverse('delete_users'), {'User': self.user_to_delete.id})
+        self.assertEqual(Users.objects.count(), 1)
+        self.assertFalse(Users.objects.filter(id=self.user_to_delete.id).exists())
+        self.assertRedirects(response, reverse('admin_page'))  # Replace 'admin_page' with the correct URL name
+
+
+class DeleteCustomerViewTest(TestCase):
+
+    def setUp(self):
+        self.admin_user = Users.objects.create(user_username='admin', user_password='adminpass', role='Admin')
+        personal_info = PersonalInfo.objects.create(myName='John Doe', phoneNumber='1234567890')
+        self.customer_to_delete = Customer.objects.create(
+            cusFirstName='John',
+            CusLastName='Doe',
+            user=self.admin_user,
+            cusAddress='123 Main St',
+            phoneNumber='1234567890',
+            email='john.doe@example.com'
+        )
+        self.admin_user.info = personal_info
+        self.admin_user.save()
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+
+    def test_delete_customer_get(self):
+        response = self.client.get(reverse('delete_customer'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'deleteCustomer.html')
+        self.assertIn(self.customer_to_delete, response.context['customers'])
+
+    def test_delete_customer_post(self):
+        response = self.client.post(reverse('delete_customer'), {'Customer': self.customer_to_delete.id})
+        self.assertEqual(Customer.objects.count(), 0)
+        self.assertFalse(Customer.objects.filter(id=self.customer_to_delete.id).exists())
+        self.assertRedirects(response, reverse('admin_page'))  # Replace 'admin_page' with the correct URL name
+
+class AddCustomerViewTest(TestCase):
+
+    def setUp(self):
+        # Creating test user with appropriate role
+        self.test_user = Users.objects.create(user_username='testuser', user_password='password', role='SalesRep')
+        self.client = Client()
+        self.client.force_login(self.test_user)
+
+    def test_add_customer_get_as_authorized_user(self):
+        response = self.client.get(reverse('add_customer'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'addCustomer.html')
+
+    def test_add_customer_post_success(self):
+        data = {
+            'cusFirstName': 'John',
+            'cusLastName': 'Doe',
+            'cusAddress': '123 Main St',
+            'cusCity': 'Cityville',
+            'cusState': 'Stateville',
+            'cusZip': '12345',
+            'phoneNumber': '1234567890',
+            'email': 'john.doe@example.com'
+        }
+        response = self.client.post(reverse('add_customer'), data)
+        self.assertEqual(Customer.objects.count(), 1)
+        self.assertTrue(Customer.objects.filter(cusFirstName='John').exists())
+        self.assertRedirects(response, reverse('admin_page'))  # Replace 'admin_page' with the correct URL name
+
+    def test_add_customer_post_invalid_data(self):
+        data = {
+            'cusFirstName': '',
+            'cusLastName': '',
+            # other fields omitted for brevity
+        }
+        response = self.client.post(reverse('add_customer'), data)
+        self.assertIn('message', response.context)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'addCustomer.html')
+
+class AddOrderViewTest(TestCase):
+
+    def setUp(self):
+        self.user = Users.objects.create(user_username='testuser', user_password='password', role='Admin')
+        Customer.objects.create(...)  # Add required fields
+        Items.objects.create(...)  # Add required fields
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_add_order_get_as_authorized_user(self):
+        response = self.client.get(reverse('add_order'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'addOrder.html')
+        self.assertIsInstance(response.context['formset'], modelformset_factory(OrderItems, form=OrderItemsForm))
+
+    def test_add_order_post_success(self):
+        data = {
+            'orderNum': 123,
+            'Customer': customer_id,  # Use an actual customer id
+            'orderDate': '2023-01-01',
+            # Add other fields and formset data as required
+        }
+        response = self.client.post(reverse('add_order'), data)
+        self.assertEqual(Orders.objects.count(), 1)
+        self.assertTrue(Orders.objects.filter(orderNum=123).exists())
+        # Check redirection based on user role
+

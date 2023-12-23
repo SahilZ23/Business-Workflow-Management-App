@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PersonalInfo, Courses, Users, Section, Policies, Customer, Items, Orders, OrderItems, Employee, Task
+from .models import PersonalInfo, Users, Customer, Items, Orders, OrderItems, Employee, Task
 # Register your models here.
 
 admin.site.register(Users)
