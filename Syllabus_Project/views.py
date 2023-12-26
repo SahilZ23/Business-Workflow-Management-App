@@ -36,10 +36,10 @@ class Login(View):
             if u.user_password == password:
                 try:
                     # The key from one of your Verification Apps, found here https://dashboard.sinch.com/verification/apps
-                    applicationKey = "554cffac-3633-4a76-aafd-8dec9c294b2a"
+                    applicationKey = "Sinch API Application Key"
 
                     # The secret from the Verification App that uses the key above, found here https://dashboard.sinch.com/verification/apps
-                    applicationSecret = "ZDotwc7m30WkVkyjYL284w=="
+                    applicationSecret = "Sinch API Secret Key"
 
                     # The number that will receive the SMS. Test accounts are limited to verified numbers.
                     # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
@@ -100,10 +100,10 @@ class verify(View):
         code = request.POST['code']
 
         # The key from one of your Verification Apps, found here https://dashboard.sinch.com/verification/apps
-        applicationKey = "554cffac-3633-4a76-aafd-8dec9c294b2a"
+        applicationKey = "Sinch API Application Key"
 
         # The secret from the Verification App that uses the key above, found here https://dashboard.sinch.com/verification/apps
-        applicationSecret = "ZDotwc7m30WkVkyjYL284w=="
+        applicationSecret = "Sinch API Secret Key"
 
         # The number to which the code was sent. Test accounts are limited to verified numbers.
         # The number must be in E.164 Format, e.g. Netherlands 0639111222 -> +31639111222
@@ -513,9 +513,9 @@ class AddOrder(View):
 
                     # Send Text Message
                     sinch_client = Client(
-                        key_id="68db7cad-c377-4a64-a223-ad2a534ee18c",
-                        key_secret="PJBGjR6Gno-3rWl-t_OSIPFub~",
-                        project_id="26137e24-6715-4df3-936c-7005ff1c9945"
+                        key_id="Sinch API Key",
+                        key_secret="Sinch API Secret Key",
+                        project_id="Sinch Project Key"
                     )
 
                     phone = "1"+ str(customer.phoneNumber)
@@ -649,9 +649,9 @@ class ProcessOrder(View):
         customer = order.Customer
         # Send Text Message
         sinch_client = Client(
-        key_id="68db7cad-c377-4a64-a223-ad2a534ee18c",
-        key_secret="PJBGjR6Gno-3rWl-t_OSIPFub~",
-        project_id="26137e24-6715-4df3-936c-7005ff1c9945"
+            key_id="Sinch API Key",
+            key_secret="Sinch API Secret Key",
+            project_id="Sinch Project Key"
         )
 
         phone = "1"+ str(customer.phoneNumber)
@@ -722,11 +722,11 @@ class DeleteOrder(View):
         # Send Text Message
         customer = order.Customer
         sinch_client = Client(
-        key_id="68db7cad-c377-4a64-a223-ad2a534ee18c",
-        key_secret="PJBGjR6Gno-3rWl-t_OSIPFub~",
-        project_id="26137e24-6715-4df3-936c-7005ff1c9945"
+            key_id="Sinch API Key",
+            key_secret="Sinch API Secret Key",
+            project_id="Sinch Project Key"
         )
-
+        
         phone = "1"+ str(customer.phoneNumber)
         sinch_client.sms.batches.send(
         body="Hello from BWMSoln! We would like to inform you that your order has been canceled." + 
@@ -1095,7 +1095,7 @@ class Navigate(View):
         api_file = open("Syllabus_Project/API_key.txt", "r")
         api_key = api_file.read()
         api_file.close()
-        api_key = "AIzaSyD6v15JNhOvb1ex_lELHwV6RqF3DUBq-hQ"
+        api_key = "Google Maps API Key"
         url = f"https://maps.googleapis.com/maps/api/geocode/json?address={urllib.parse.quote(address)}&key={api_key}"
         response = requests.get(url).json()
         if response['status'] == 'OK':
@@ -1144,13 +1144,7 @@ class HR(View):
     
     def post(self, request):
         pass
-
-class ViewEmployeeInfo(View):
-    def get(self, request):
-        pass
-    def post(self, request):
-        pass
-
+        
 class CustomerView(View):
     def get(self, request):
         if not Validations.checkLogin(self, request):
